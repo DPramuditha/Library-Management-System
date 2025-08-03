@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Register</title>
+</head>
+<body>
+<div class="flex flex-col lg:flex-row items-center justify-center min-h-screen bg-gray-100 gap-8 p-8">
+    <div class="bg-white rounded-lg shadow-2xl p-6 sm:p-8 w-full max-w-md">
+        <div class="text-center mb-6">
+            <img src="src/assets/books01.gif" alt="Your Company" class="mx-auto h-25 w-auto" />
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Create a new account</h2>
+        </div>
+
+        <form action="#" method="POST" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-900">Full Name</label>
+                <input id="name" type="text" name="name" required autocomplete="name" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-900">Email address</label>
+                <input id="email" type="email" name="email" required autocomplete="email" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-900">Password</label>
+                <input id="password" type="password" name="password" required autocomplete="new-password" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+            </div>
+            <div>
+                <label for="role" class="block text-sm font-medium text-gray-900">Role</label>
+                <select id="role" name="role" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm">
+                    <option value="" disabled selected>Select your role</option>
+                    <option value="student">Student</option>
+                    <option value="librarian">Librarian</option>
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="w-full flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transform duration-300">Register</button>
+            </div>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+                Already have an account?
+                <a href="login.html" class="text-indigo-600 hover:text-indigo-500 font-semibold">
+                Sign in
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <div class="hidden lg:block">
+        <img
+                src="src/assets/register_Image.jpg"
+                alt="Register Illustration"
+                class="w-xl h-auto object-contain"
+        />
+    </div>
+</div>
+
+</body>
+</html>

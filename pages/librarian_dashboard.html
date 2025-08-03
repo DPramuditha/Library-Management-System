@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Librarian Dashboard</title>
+</head>
+<body>
+<div class="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transition-all duration-300 ease-in-out lg:block lg:static lg:inset-0">
+        <div class="flex flex-col h-full">
+            <div class="flex items-center justify-between h-20 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <div class="flex items-center">
+                    <img src="../assets/books02.gif" alt="Logo" class="h-15 w-15 rounded-lg">
+                </div>
+                <div class="text-xl font-bold">
+                    <span class="text-2xl font-bold">Librarian Dashboard</span>
+                </div>
+                <button class="lg:hidden p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
+                </button>
+            </div>
+            <div>
+                <nav class="flex-1 px-4 py-6 space-y-2">
+                    <a href="#" onclick="showSection('home')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                        <img src="../assets/home.svg" alt="Home Icon" class="h-7 w-7 mr-2">
+                        <span class="text-base font-medium">Home</span>
+                    </a>
+                    <a href="#" onclick="showSection('profile')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                        <img src="../assets/circle-user.svg" alt="Profile Icon" class="h-7 w-7 mr-2">
+                        <span class="text-md font-medium">User Accounts</span>
+                    </a>
+                    <a href="#" onclick="showSection('borrowed')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                        <img src="../assets/books.svg" alt="Borrowed Books Icon" class="h-7 w-7 mr-2">
+                        <span class="text-md font-medium">Borrowed Books</span>
+                    </a>
+                    <a href="#" onclick="showSection('search')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                        <img src="../assets/assessment.svg" alt="Search Icon" class="h-7 w-7 mr-2">
+                        <span class="text-md font-medium">Book Information</span>
+                    </a>
+                    <a href="#" onclick="showSection('profile')" class="flex items>-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                        <img src="assets/feedback.svg" alt="Feedback Icon" class="h-7 w-7 mr-2">
+                        <span class="text-md font-medium">Profile</span>
+                    </a>
+                    <a href="#" onclick="logout()" class="flex items-center px-3 py-2 rounded-lg hover:bg-red-500 shadow-md hover:transform duration-300 hover:scale-95">
+                        <img src="../assets/user-logout.svg" alt="Logout Icon" class="h-7 w-7 mr-2">
+                        <span class="text-base font-medium">Logout</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col lg:ml-0">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200 backdrop-blur-lg bg-opacity-90">
+            <div class="flex items-center justify-between h-16 px-6">
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <p class="text-lg text-gray-500">Welcome back, Dimuthu!</p>
+                    </div>
+                    <div class="hidden md:block relative">
+                        <input type="text" placeholder="Search..." class="w-80 pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Right side - Notifications and Profile -->
+                <div class="flex items-center space-x-4">
+                    <!-- Notification Button -->
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                        <img src="../assets/bell-notification-social-media.svg" alt="Notification Icon" class="h-6 w-6">
+                        <!-- Notification badge -->
+                        <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <!-- Profile Icon -->
+                    <button class="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                        <img src="assets/profile-placeholder.png" alt="Profile" class="h-8 w-8 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+                        <div class="h-8 w-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium" style="display: none;">
+                            D
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto p-6">
+            <!-- Home Section -->
+            <div id="home-section" class="content-section">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard Overview</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Books Borrowed</h3>
+                        <p class="text-3xl font-bold text-blue-600">12</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Due Soon</h3>
+                        <p class="text-3xl font-bold text-orange-600">3</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Available Books</h3>
+                        <p class="text-3xl font-bold text-green-600">1,245</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profile-section" class="content-section hidden">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <img src="assets/profile-placeholder.png" alt="Profile" class="h-20 w-20 rounded-full object-cover">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Dimuthu Pramuditha</h2>
+                            <p class="text-gray-600">Student ID: STU001</p>
+                            <p class="text-gray-600">Email: dimuthu@example.com</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input type="text" value="Dimuthu Pramuditha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" value="dimuthu@example.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Borrowed Books Section -->
+            <div id="borrowed-section" class="content-section hidden">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Borrowed Books</h1>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">The Great Gatsby</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">F. Scott Fitzgerald</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
+                            <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">On Time</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Search Books Section -->
+            <div id="search-section" class="content-section hidden">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Search Books</h1>
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex space-x-4">
+                        <input type="text" placeholder="Search by title, author, or ISBN..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Search</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Book Title</h3>
+                        <p class="text-gray-600 mb-4">Author Name</p>
+                        <button class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Borrow</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+    function showSection(sectionName) {
+        // Hide all content sections
+        const sections = document.querySelectorAll('.content-section');
+        sections.forEach(section => {
+            section.classList.add('hidden');
+        });
+
+        // Show selected section
+        document.getElementById(sectionName + '-section').classList.remove('hidden');
+
+        // Update active navigation item
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.classList.remove('bg-blue-500', 'text-white');
+        });
+
+        // Add active class to clicked nav item
+        event.target.closest('.nav-link').classList.add('bg-blue-500', 'text-white');
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            window.location.href = 'login.html';
+        }
+    }
+</script>
+</body>
+</html>
