@@ -28,7 +28,7 @@
 
         }
         if(empty($errors)){
-            $stmt = $conn-> prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
+            $stmt = $conn-> prepare("SELECT id, name, email, password, role FROM students WHERE email = ?");
             $stmt -> bind_param("s", $email);
             $stmt -> execute();
             $result = $stmt-> get_result();
@@ -47,7 +47,7 @@
                         header("Location: ../librarian/dashboard.php");
 
                     } else {
-                        header("Location: ../student/dashboard.php");
+                        header("Location: student_dashboard.php");
 
                     }
                     exit;
