@@ -11,12 +11,88 @@ if($conn->connect_error){
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Handle profile update
+$updateMessage = '';
+$updateSuccess = false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    $fullName = trim($_POST['full_name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $studentId = $_SESSION['user_id'] ?? 1; // Get from session or default to 1
+
+    // Validation
+    $errors = [];
+
+    if (empty($fullName)) {
+        $errors[] = "Full name is required";
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Valid email is required";
+    }
+
+    if (empty($phone)) {
+        $errors[] = "Phone number is required";
+    }
+
+    if (empty($errors)) {
+        // Check if user exists in users table and update
+        $checkUser = $conn->prepare("SELECT * FROM students WHERE id = ?");
+        $checkUser->bind_param("i", $studentId);
+        $checkUser->execute();
+        $userResult = $checkUser->get_result();
+
+        if ($userResult->num_rows > 0) {
+            // Update users table
+            $updateUser = $conn->prepare("UPDATE students SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?");
+            $updateUser->bind_param("ssssi", $fullName, $email, $phone, $address, $studentId);
+
+            if ($updateUser->execute()) {
+                $updateSuccess = true;
+                $updateMessage = "Profile updated successfully!";
+                $_SESSION['user_name'] = $fullName;
+                $_SESSION['user_email'] = $email;
+            } else {
+                $updateMessage = "Error updating profile: " . $conn->error;
+            }
+            $updateUser->close();
+        } else {
+            $updateMessage = "User not found";
+        }
+        $checkUser->close();
+    } else {
+        $updateMessage = implode(', ', $errors);
+    }
+}
+
+// Get current user data
+$userId = $_SESSION['user_id'] ?? 1;
+$userQuery = $conn->prepare("SELECT * FROM students WHERE id = ?");
+$userQuery->bind_param("i", $userId);
+$userQuery->execute();
+$userResult = $userQuery->get_result();
+$userData = $userResult->fetch_assoc();
+$userQuery->close();
+
+// Set default values if no user data exists
+if (!$userData) {
+    $userData = [
+        'name' => 'Dimuthu Pramuditha',
+        'email' => 'dimuthu@example.com',
+        'phone' => '071 123 4567',
+        'address' => '123 Main St, Colombo'
+    ];
+}
+
+// Your existing functions...
 function getAllBooks($conn)
 {
     $sql = "SELECT * FROM books ORDER BY created_at DESC";
     $result = $conn->query($sql);
     $books = [];
-    if ($result->num_rows > 0) {
+    if ($result && $result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
             $books[] = $row;
         }
@@ -29,7 +105,7 @@ function getAvailableBooks($conn)
     $sql = "SELECT * FROM books WHERE available_copies > 0 ORDER BY title";
     $result = $conn->query($sql);
     $books = [];
-    if ($result->num_rows > 0) {
+    if ($result && $result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
             $books[] = $row;
         }
@@ -43,7 +119,7 @@ function searchBooks($conn, $searchTerm)
     $sql = "SELECT * FROM books WHERE title LIKE '%$searchTerm%' OR author LIKE '%$searchTerm%' OR isbn LIKE '%$searchTerm%' ORDER BY title";
     $result = $conn->query($sql);
     $books = [];
-    if ($result->num_rows > 0) {
+    if ($result && $result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
             $books[] = $row;
         }
@@ -60,7 +136,6 @@ $searchResults = [];
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $searchResults = searchBooks($conn, $_GET['search']);
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -392,51 +467,109 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
             </div>
 
             <!-- Profile Section -->
+            <!-- Profile Section - Updated -->
             <div id="profile-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
-                <div class="mb-6 flex justify-center">
-                    <img src="pages/assets/update01.jpg" alt="Profile Update"
-                         class="w-full h-90 object-cover rounded-lg shadow-md">
+
+                <!-- Success/Error Message -->
+                <?php if (!empty($updateMessage)): ?>
+                    <div class="mb-6 p-4 rounded-lg <?php echo $updateSuccess ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'; ?>">
+                        <div class="flex items-center">
+                            <?php if ($updateSuccess): ?>
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            <?php else: ?>
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            <?php endif; ?>
+                            <?php echo htmlspecialchars($updateMessage); ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="relative overflow-hidden rounded-lg shadow-md">
+                        <img src="pages/assets/profile02.jpg" alt="Library Reading"
+                             class="w-full h-80 object-cover transition-transform duration-700 hover:scale-110">
+                    </div>
+                    <div class="relative overflow-hidden rounded-lg shadow-md">
+                        <img src="pages/assets/profile01.jpg" alt="Digital Library"
+                             class="w-full h-80 object-cover transition-transform duration-700 hover:scale-110">
+                    </div>
                 </div>
+
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex items-center space-x-4 mb-6">
                         <img src="assets/profile-placeholder.png" alt="Profile"
                              class="h-20 w-20 rounded-full object-cover border-2 border-gray-300">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Dimuthu Pramuditha</h2>
-                            <p class="text-gray-600">Email: dimuthu@example.com</p>
+                            <h2 class="text-2xl font-bold text-gray-900"><?php echo htmlspecialchars($userData['name']); ?></h2>
+                            <p class="text-gray-600">Email: <?php echo htmlspecialchars($userData['email']); ?></p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <div class="flex items-center space-x-2 mb-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
-                                </svg>
-                                <label class="block text-sm font-medium text-gray-700">Full Name</label>
+
+                    <form method="POST" action="">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                        <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                                    </svg>
+                                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                                </div>
+                                <input type="text" name="full_name" value="<?php echo htmlspecialchars($userData['name']); ?>" required
+                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
                             </div>
-                            <!--                            <label class="block text-sm font-medium text-gray-700">Full Name</label>-->
-                            <input type="text" value="Dimuthu Pramuditha"
-                                   class="p-4  block w-full rounded-md border-sky-700 border-2 border-gray-700 focus:border-pink-600 shadow-sm border-x-indigo-500 hover:bg-indigo-100 transition-colors duration-400">
-                        </div>
-                        <div>
-                            <div class="flex items-center space-x-2 mb-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                    <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-                                    <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-                                </svg>
-                                <label class="block text-sm font-medium text-gray-700">Email</label>
+
+                            <div>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                        <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                                        <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                                    </svg>
+                                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                                </div>
+                                <input type="email" name="email" value="<?php echo htmlspecialchars($userData['email']); ?>" required
+                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
                             </div>
-                            <!--                            <label class="block text-sm font-medium text-gray-700">Email</label>-->
-                            <input type="email" value="dimuthu@example.com"
-                                   class="p-4 block w-full rounded-md border-sky-700 border-2 border-gray-700 shadow-sm border-x-indigo-500 hover:bg-indigo-100 transition-colors duration-400">
                         </div>
-                    </div>
-                    <div>
-                        <button class="mt-6 w-50 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300">
-                            Update Profile
-                        </button>
-                    </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                        <path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" />
+                                    </svg>
+                                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                                </div>
+                                <input type="tel" name="phone" value="<?php echo htmlspecialchars($userData['phone'] ?? ''); ?>" required
+                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
+                            </div>
+
+                            <div>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                        <path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
+                                    </svg>
+                                    <label class="block text-sm font-medium text-gray-700">Address</label>
+                                </div>
+                                <input type="text" name="address" value="<?php echo htmlspecialchars($userData['address'] ?? ''); ?>"
+                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
+                            </div>
+                        </div>
+
+                        <div>
+                            <button type="submit" name="update_profile"
+                                    class="mt-6 px-8 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 inline mr-2">
+                                    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+                                </svg>
+                                Update Profile
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
