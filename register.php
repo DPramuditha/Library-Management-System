@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    $phoneNumber = trim($_POST['phoneNumber'] ?? ''); // Changed from 'phone' to 'phoneNumber'
+    $phoneNumber = trim($_POST['phoneNumber'] ?? '');
     $address = trim($_POST['address'] ?? '');
     $role = $_POST['role'] ?? '';
 
@@ -50,9 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Please select a valid role";
     }
 
-    // Check if email already exists
+    // Check if email already exists in users table (not students table)
     if (empty($errors)) {
-        $stmt = $conn->prepare("SELECT id FROM students WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -67,7 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $conn->prepare("INSERT INTO students (name, email, password, phone, address, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        // Insert into users table (not students table)
+        $stmt = $conn->prepare("INSERT INTO users (name, email, password, phone, address, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("ssssss", $name, $email, $hashedPassword, $phoneNumber, $address, $role);
 
         if ($stmt->execute()) {
@@ -205,3 +206,4 @@ $conn->close();
 
 </body>
 </html>
+
