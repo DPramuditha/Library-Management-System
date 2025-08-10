@@ -75,6 +75,84 @@ if ($booksResult && $booksResult->num_rows > 0) {
     }
 }
 
+// Handle Update Book form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_book'])) {
+    $book_id = trim($_POST['book_id'] ?? '');
+    $title = trim($_POST['title'] ?? '');
+    $author = trim($_POST['author'] ?? '');
+    $category = trim($_POST['category'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $publication_year = trim($_POST['publication_year'] ?? '');
+    $publisher = trim($_POST['publisher'] ?? '');
+    $total_copies = trim($_POST['total_copies'] ?? '');
+    $available_copies = trim($_POST['available_copies'] ?? '');
+    $status = trim($_POST['status'] ?? '');
+
+    $book_errors = [];
+
+    // Validation
+    if (empty($book_id)) {
+        $book_errors[] = "Book ID is required";
+    }
+    if (empty($title)) {
+        $book_errors[] = "Title is required";
+    }
+    if (empty($author)) {
+        $book_errors[] = "Author is required";
+    }
+    if (empty($category)) {
+        $book_errors[] = "Category is required";
+    }
+    if (empty($publication_year) || !is_numeric($publication_year)) {
+        $book_errors[] = "Valid publication year is required";
+    }
+    if (empty($total_copies) || !is_numeric($total_copies) || $total_copies < 0) {
+        $book_errors[] = "Valid total copies number is required";
+    }
+    if ($available_copies ==='' || !is_numeric($available_copies) || $available_copies < 0) {
+        $book_errors[] = "Valid available copies number is required";
+    }
+    if ($available_copies > $total_copies) {
+        $book_errors[] = "Available copies cannot exceed total copies";
+    }
+    if (empty($status) || !in_array($status, ['available', 'unavailable'])) {
+        $book_errors[] = "Please select a valid status";
+    }
+
+    if (empty($book_errors)) {
+        // Check if book exists
+        $stmt = $conn->prepare("SELECT id FROM books WHERE id = ?");
+        $stmt->bind_param("i", $book_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            // Update book information
+            $updateStmt = $conn->prepare("UPDATE books SET title = ?, author = ?, category = ?, description = ?, publication_year = ?, publisher = ?, total_copies = ?, available_copies = ?, status = ? WHERE id = ?");
+            $updateStmt->bind_param("ssssisiisi", $title, $author, $category, $description, $publication_year, $publisher, $total_copies, $available_copies, $status, $book_id);
+
+            if ($updateStmt->execute()) {
+                $book_success = "Book updated successfully!";
+                // Refresh books data
+                $booksQuery = "SELECT id, title, author, category, description, publication_year, publisher, total_copies, available_copies, status FROM books ORDER BY id DESC";
+                $booksResult = $conn->query($booksQuery);
+                $books = [];
+                if ($booksResult && $booksResult->num_rows > 0) {
+                    while ($row = $booksResult->fetch_assoc()) {
+                        $books[] = $row;
+                    }
+                }
+            } else {
+                $book_errors[] = "Error updating book: " . $conn->error;
+            }
+            $updateStmt->close();
+        } else {
+            $book_errors[] = "Book not found";
+        }
+        $stmt->close();
+    }
+}
+
 $conn->close();
 ?>
 
@@ -552,9 +630,127 @@ $conn->close();
             </div>
 
 
+
             <!-- Maintain Books Section -->
             <div id="maintainbooks-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Maintain Books</h1>
+
+                <!-- Success Message for Book Update -->
+                <?php if (isset($book_success)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <?php echo htmlspecialchars($book_success); ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Error Messages for Book Update -->
+                <?php if (isset($book_errors) && !empty($book_errors)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            Please fix the following errors:
+                        </div>
+                        <ul class="list-disc list-inside">
+                            <?php foreach ($book_errors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <div class="mb-6 p-4 rounded-lg bg-white border border-gray-200 shadow-sm">
+                    <h1 class="text-2xl font-semibold text-gray-900">Update Book Information</h1>
+                    <p class="text-gray-600 mb-4">Use the form below to update book details. Ensure all fields are filled out correctly.</p>
+                    <form method="POST" action="">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Book ID</label>
+                                <input type="number" name="book_id" required
+                                       value="<?php echo htmlspecialchars($_POST['book_id'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter Book ID">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Book Title</label>
+                                <input type="text" name="title" required
+                                       value="<?php echo htmlspecialchars($_POST['title'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter book title">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Author</label>
+                                <input type="text" name="author" required
+                                       value="<?php echo htmlspecialchars($_POST['author'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter author name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Category</label>
+                                <input type="text" name="category" required
+                                       value="<?php echo htmlspecialchars($_POST['category'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter category">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Description</label>
+                                <input type="text" name="description"
+                                       value="<?php echo htmlspecialchars($_POST['description'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter description">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Publication Year</label>
+                                <input type="number" name="publication_year" required
+                                       value="<?php echo htmlspecialchars($_POST['publication_year'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter year">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Publisher</label>
+                                <input type="text" name="publisher"
+                                       value="<?php echo htmlspecialchars($_POST['publisher'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter publisher">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Total Copies</label>
+                                <input type="number" name="total_copies" required min="0"
+                                       value="<?php echo htmlspecialchars($_POST['total_copies'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter total copies">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Available Copies</label>
+                                <input type="number" name="available_copies" required min="0"
+                                       value="<?php echo htmlspecialchars($_POST['available_copies'] ?? ''); ?>"
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter available copies">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                <select name="status" required class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm">
+                                    <option value="">Select Status</option>
+                                    <option value="available" <?php echo (isset($_POST['status']) && $_POST['status'] === 'available') ? 'selected' : ''; ?>>Available</option>
+                                    <option value="unavailable" <?php echo (isset($_POST['status']) && $_POST['status'] === 'unavailable') ? 'selected' : ''; ?>>Unavailable</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" name="update_book" class="col-span-1 md:col-span-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-all duration-300 hover:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                            </svg>
+                            Update Book Information
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Books Display Table -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-900">Book Maintenance</h2>
@@ -588,82 +784,38 @@ $conn->close();
                                 <tbody class="bg-white divide-y divide-gray-200">
                                 <?php foreach ($books as $book): ?>
                                     <tr class="hover:bg-gray-50 transition-colors duration-200">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            #<?php echo str_pad($book['id'], 3, '0', STR_PAD_LEFT); ?>
-                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#<?php echo str_pad($book['id'], 3, '0', STR_PAD_LEFT); ?></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo htmlspecialchars($book['title']); ?></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($book['author']); ?></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($book['category']); ?></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo $book['available_copies'] . '/' . $book['total_copies']; ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                <?php echo htmlspecialchars($book['title']); ?>
-                                            </div>
-                                            <?php if (!empty($book['publisher'])): ?>
-                                                <div class="text-sm text-gray-500">
-                                                    <?php echo htmlspecialchars($book['publisher']); ?>
-                                                    <?php if (!empty($book['publication_year'])): ?>
-                                                        (<?php echo htmlspecialchars($book['publication_year']); ?>)
-                                                    <?php endif; ?>
-                                                </div>
+                                            <?php if ($book['status'] === 'available'): ?>
+                                                <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            <span class="relative flex size-3 mr-2">
+                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                                                <span class="relative inline-flex size-3 rounded-full bg-green-500"></span>
+                                            </span>
+                                            Available
+                                        </span>
+                                            <?php else: ?>
+                                                <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                            <span class="relative flex size-3 mr-2">
+                                                <span class="relative inline-flex size-3 rounded-full bg-red-500"></span>
+                                            </span>
+                                            Unavailable
+                                        </span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?php echo htmlspecialchars($book['author']); ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        <?php echo htmlspecialchars($book['category']); ?>
-                                    </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <div class="text-sm text-gray-900">
-                                                <?php echo $book['available_copies'] ?? 0; ?> / <?php echo $book['total_copies'] ?? 0; ?>
-                                            </div>
-                                            <div class="text-xs text-gray-500">Available / Total</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <?php
-                                            $status = strtolower($book['status'] ?? 'unknown');
-                                            $statusClass = '';
-                                            $statusText = '';
-                                            $animationClass = '';
-
-                                            switch ($status) {
-                                                case 'available':
-                                                    $statusClass = 'bg-green-100 text-green-800';
-                                                    $statusText = 'Available';
-                                                    $animationClass = 'bg-green-500';
-                                                    break;
-                                                case 'borrowed':
-                                                    $statusClass = 'bg-yellow-100 text-yellow-800';
-                                                    $statusText = 'Borrowed';
-                                                    $animationClass = 'bg-yellow-500';
-                                                    break;
-                                                case 'unavailable':
-                                                    $statusClass = 'bg-red-100 text-red-800';
-                                                    $statusText = 'Unavailable';
-                                                    $animationClass = 'bg-red-500';
-                                                    break;
-                                                default:
-                                                    $statusClass = 'bg-gray-100 text-gray-800';
-                                                    $statusText = 'Unknown';
-                                                    $animationClass = 'bg-gray-500';
-                                            }
-                                            ?>
-                                            <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
-                                        <span class="relative flex size-3 mr-2">
-                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full <?php echo $animationClass; ?> opacity-75"></span>
-                                            <span class="relative inline-flex size-3 rounded-full <?php echo $animationClass; ?>"></span>
-                                        </span>
-                                        <?php echo $statusText; ?>
-                                    </span>
-                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                            <button  class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
+                                            <button onclick="fillUpdateForm(<?php echo htmlspecialchars(json_encode($book)); ?>)" class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                 </svg>
                                                 Update
                                             </button>
-                                            <button class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
+                                            <button onclick="deleteBook(<?php echo $book['id']; ?>, '<?php echo htmlspecialchars($book['title']); ?>')" class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                 </svg>
                                                 Delete
@@ -677,6 +829,7 @@ $conn->close();
                     <?php endif; ?>
                 </div>
             </div>
+
             <!-- Borrowing Section -->
             <div id="borrowing-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Books Borrowing Details</h1>

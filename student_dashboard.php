@@ -483,7 +483,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                 </div>
             </div>
 
-            <!-- Profile Section -->
+
             <!-- Profile Section - Updated -->
             <div id="profile-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
