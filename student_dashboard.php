@@ -102,7 +102,8 @@ function getAllBooks($conn)
 
 function getAvailableBooks($conn)
 {
-    $sql = "SELECT * FROM books WHERE available_copies > 0 ORDER BY title";
+//    $sql = "SELECT * FROM books WHERE available_copies > 0 ORDER BY title";
+    $sql = "SELECT * FROM books ORDER BY created_at DESC";
     $result = $conn->query($sql);
     $books = [];
     if ($result && $result->num_rows > 0) {
