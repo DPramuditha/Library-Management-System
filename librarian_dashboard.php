@@ -115,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_book'])) {
     if ($available_copies > $total_copies) {
         $book_errors[] = "Available copies cannot exceed total copies";
     }
-    if (empty($status) || !in_array($status, ['available', 'unavailable'])) {
-        $book_errors[] = "Please select a valid status";
+    if (empty($status) || !in_array($status, ['available', 'borrowed', 'unavailable'])) {
+        $book_errors[] = "Please select a valid status (available, borrowed, or unavailable)";
     }
 
     if (empty($book_errors)) {
@@ -737,6 +737,7 @@ $conn->close();
                                 <select name="status" required class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm">
                                     <option value="">Select Status</option>
                                     <option value="available" <?php echo (isset($_POST['status']) && $_POST['status'] === 'available') ? 'selected' : ''; ?>>Available</option>
+                                    <option value="borrowed" <?php echo (isset($_POST['status']) && $_POST['status'] === 'borrowed') ? 'selected' : ''; ?>>Borrowed</option>
                                     <option value="unavailable" <?php echo (isset($_POST['status']) && $_POST['status'] === 'unavailable') ? 'selected' : ''; ?>>Unavailable</option>
                                 </select>
                             </div>
@@ -790,22 +791,44 @@ $conn->close();
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($book['category']); ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo $book['available_copies'] . '/' . $book['total_copies']; ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <?php if ($book['status'] === 'available'): ?>
-                                                <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            <span class="relative flex size-3 mr-2">
-                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                                                <span class="relative inline-flex size-3 rounded-full bg-green-500"></span>
+                                            <?php
+                                            $statusClass = '';
+                                            $statusText = '';
+                                            $animationClass = '';
+
+                                            switch($book['status']) {
+                                                case 'available':
+                                                    $statusClass = 'bg-green-100 text-green-800';
+                                                    $statusText = 'Available';
+                                                    $animationClass = 'bg-green-400 opacity-75';
+                                                    $dotClass = 'bg-green-500';
+                                                    break;
+                                                case 'borrowed':
+                                                    $statusClass = 'bg-yellow-100 text-yellow-800';
+                                                    $statusText = 'Borrowed';
+                                                    $animationClass = 'bg-yellow-400 opacity-75';
+                                                    $dotClass = 'bg-yellow-500';
+                                                    break;
+                                                case 'unavailable':
+                                                    $statusClass = 'bg-red-100 text-red-800';
+                                                    $statusText = 'Unavailable';
+                                                    $animationClass = 'bg-red-400 opacity-75';
+                                                    $dotClass = 'bg-red-500';
+                                                    break;
+                                                default:
+                                                    $statusClass = 'bg-gray-100 text-gray-800';
+                                                    $statusText = 'Unknown';
+                                                    $animationClass = 'bg-gray-400 opacity-75';
+                                                    $dotClass = 'bg-gray-500';
+                                            }
+                                            ?>
+                                            <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
+                                                <span class="relative flex size-3 mr-2">
+                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full <?php echo $animationClass; ?>"></span>
+                                                <span class="relative inline-flex size-3 rounded-full <?php echo $dotClass; ?>"></span>
                                             </span>
-                                            Available
-                                        </span>
-                                            <?php else: ?>
-                                                <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            <span class="relative flex size-3 mr-2">
-                                                <span class="relative inline-flex size-3 rounded-full bg-red-500"></span>
+                                            <?php echo $statusText; ?>
                                             </span>
-                                            Unavailable
-                                        </span>
-                                            <?php endif; ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                             <button onclick="fillUpdateForm(<?php echo htmlspecialchars(json_encode($book)); ?>)" class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105">

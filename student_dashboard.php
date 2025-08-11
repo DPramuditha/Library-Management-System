@@ -137,6 +137,93 @@ $searchResults = [];
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $searchResults = searchBooks($conn, $_GET['search']);
 }
+
+// Handle Book Borrowing
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['borrow_book'])) {
+    $bookId = $_POST['book_id'] ?? '';
+    $userId = $_SESSION['user_id'] ?? 1;
+    $borrowDate = date('Y-m-d');
+    $dueDate = date('Y-m-d', strtotime('+14 days'));
+
+    $borrow_errors = [];
+
+    // Check if book exists and is available
+    $bookCheck = $conn->prepare("SELECT id, title, available_copies FROM books WHERE id = ? AND available_copies > 0");
+    $bookCheck->bind_param("i", $bookId);
+    $bookCheck->execute();
+    $bookResult = $bookCheck->get_result();
+
+    if ($bookResult->num_rows === 0) {
+        $borrow_errors[] = "Book is not available for borrowing";
+    }
+
+    // Check if user already borrowed this book
+    $alreadyBorrowed = $conn->prepare("SELECT id FROM borrowed_books WHERE user_id = ? AND book_id = ? AND status = 'borrowed'");
+    $alreadyBorrowed->bind_param("ii", $userId, $bookId);
+    $alreadyBorrowed->execute();
+    $borrowedResult = $alreadyBorrowed->get_result();
+
+    if ($borrowedResult->num_rows > 0) {
+        $borrow_errors[] = "You have already borrowed this book";
+    }
+
+    if (empty($borrow_errors)) {
+        $conn->begin_transaction();
+        try {
+            // Insert into borrowed_books table
+            $borrowStmt = $conn->prepare("INSERT INTO borrowed_books (user_id, book_id, borrow_date, due_date, status) VALUES (?, ?, ?, ?, 'borrowed')");
+            $borrowStmt->bind_param("iiss", $userId, $bookId, $borrowDate, $dueDate);
+            $borrowStmt->execute();
+
+            // Update available_copies
+            $updateBook = $conn->prepare("UPDATE books SET available_copies = available_copies - 1 WHERE id = ?");
+            $updateBook->bind_param("i", $bookId);
+            $updateBook->execute();
+
+            $conn->commit();
+            $borrow_success = "Book borrowed successfully! Due date: " . date('F j, Y', strtotime($dueDate));
+
+            // Refresh books data
+            $topBooks = getAllBooks($conn);
+            $availableBooks = getAvailableBooks($conn);
+
+        } catch (Exception $e) {
+            $conn->rollback();
+            $borrow_errors[] = "Error borrowing book: " . $e->getMessage();
+        }
+    }
+}
+
+// Function to get borrowed books
+function getBorrowedBooks($conn, $userId) {
+    // Check if borrowed_books table exists
+    $tableCheck = $conn->query("SHOW TABLES LIKE 'borrowed_books'");
+    if ($tableCheck->num_rows == 0) {
+        return []; // Return empty array if table doesn't exist
+    }
+
+    $sql = "SELECT bb.*, b.title, b.author, b.isbn, b.category, bb.borrow_date, bb.due_date, bb.status
+            FROM borrowed_books bb
+            JOIN books b ON bb.book_id = b.id
+            WHERE bb.user_id = ?
+            ORDER BY bb.borrow_date DESC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $borrowedBooks = [];
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $borrowedBooks[] = $row;
+        }
+    }
+    return $borrowedBooks;
+}
+
+// Get borrowed books for current user
+$borrowedBooks = getBorrowedBooks($conn, $userId);
 ?>
 
 <!DOCTYPE html>
@@ -287,8 +374,8 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                             D
                         </div>
                         <div class="hidden md:block text-sm font-medium">
-                            <p>Dimuthu Pramuditha</p>
-                            <p class="text-xs text-gray-500">Student Email: dimuthu01@gmail.com</p>
+                            <p><?php echo htmlspecialchars($userData['name']); ?></p>
+                            <p class="text-xs text-gray-500">Student Email: <?php echo htmlspecialchars($userData['email']); ?></p>
                         </div>
                     </button>
                     <button class=" hidden lg:flex items-center px-3 py-2 rounded-lg hover:bg-gray-300 hover:transform duration-300 hover:scale-95">
@@ -466,16 +553,15 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                                         <?php echo htmlspecialchars($book['category']); ?> •
                                         <?php echo $book['available_copies'] > 0 ? 'Available (' . $book['available_copies'] . ')' : 'Borrowed'; ?>
                                     </p>
-                                    <?php if ($book['available_copies'] > 0): ?>
-                                        <button onclick="borrowBook(<?php echo $book['id']; ?>)"
-                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                                            Borrow Book
+                                    <!-- In your book display sections, replace the borrow button with: -->
+                                    <form method="POST" action="" style="display: inline;">
+                                        <input type="hidden" name="book_id" value="<?php echo $book['id']; ?>">
+                                        <button type="submit" name="borrow_book"
+                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                                <?php echo ($book['available_copies'] <= 0) ? 'disabled' : ''; ?>>
+                                            <?php echo ($book['available_copies'] <= 0) ? 'Not Available' : 'Borrow Book'; ?>
                                         </button>
-                                    <?php else: ?>
-                                        <button class="w-full px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-lg cursor-not-allowed" disabled>
-                                            Currently Borrowed
-                                        </button>
-                                    <?php endif; ?>
+                                    </form>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -591,71 +677,212 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
             </div>
 
             <!-- Borrowed Books Section -->
+            <!-- Replace your borrowed-section div with: -->
             <div id="borrowed-section" class="content-section hidden">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">Borrowed Books</h1>
-                <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">My Borrowed Books</h1>
+
+                <div class="mb-6">
                     <img src="pages/assets/Borrowed Books.jpg" alt="Borrowed Books"
-                         class="w-full h-100 object-cover rounded-lg shadow-md mb-6">
+                         class="w-full h-64 object-cover rounded-lg shadow-md">
                 </div>
-                <div class="mt-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Top Books</h2>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <?php foreach (array_slice($topBooks, 0, 4) as $book): ?>
-                            <div class="bg-white rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out overflow-hidden">
-                                <div class="h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                                    <?php if (!empty($book['cover_image_url'])): ?>
-                                        <img src="<?php echo htmlspecialchars($book['cover_image_url']); ?>"
-                                             alt="<?php echo htmlspecialchars($book['title']); ?>"
-                                             class="h-40 w-28 object-cover rounded shadow-lg"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                    <?php endif; ?>
-                                    <div class="h-40 w-28 bg-blue-500 text-white rounded shadow-lg flex items-center justify-center text-xs font-medium text-center p-2"
-                                         style="<?php echo !empty($book['cover_image_url']) ? 'display: none;' : ''; ?>">
-                                        <?php echo htmlspecialchars($book['title']); ?>
-                                    </div>
-                                </div>
-                                <div class="p-4">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <h3 class="text-lg font-semibold text-gray-900 truncate"><?php echo htmlspecialchars($book['title']); ?></h3>
-                                        <span class="relative flex size-3">
-                                <?php if ($book['available_copies'] > 0): ?>
-                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                                    <span class="relative inline-flex size-3 rounded-full bg-green-500"></span>
-                                <?php else: ?>
-                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                    <span class="relative inline-flex size-3 rounded-full bg-red-500"></span>
-                                <?php endif; ?>
-                            </span>
-                                    </div>
-                                    <p class="text-sm text-gray-600 mb-2"><?php echo htmlspecialchars($book['author']); ?></p>
-                                    <p class="text-xs <?php echo $book['available_copies'] > 0 ? 'text-gray-500' : 'text-red-500'; ?> mb-3">
-                                        <?php echo htmlspecialchars($book['category']); ?> •
-                                        <?php echo $book['available_copies'] > 0 ? 'Available (' . $book['available_copies'] . ')' : 'Borrowed'; ?>
-                                    </p>
-                                    <?php if ($book['available_copies'] > 0): ?>
-                                        <button onclick="borrowBook(<?php echo $book['id']; ?>)"
-                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                                            Borrow Book
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="w-full px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-lg cursor-not-allowed" disabled>
-                                            Currently Borrowed
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-blue-50 p-6 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out">
+                        <div class="flex items-center justify-between">
+                            <div >
+                                <p class="text-lg font-medium text-blue-600">Currently Borrowed</p>
+                                <p class="text-2xl font-bold text-blue-900">
+                                    <?php echo count(array_filter($borrowedBooks, function($book) { return $book['status'] === 'borrowed'; })); ?>
+                                </p>
                             </div>
-                        <?php endforeach; ?>
+                            <div class="p-3 bg-blue-100 rounded-full">
+<!--                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>-->
+<!--                                </svg>-->
+                                <img src="assets/icons8-books-96.png" alt="Books Icon"
+                                     class="w-10 h-10 text-blue-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-orange-50 p-6 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-lg font-medium text-orange-600">Due Soon</p>
+                                <p class="text-2xl font-bold text-orange-900">
+                                    <?php
+                                    $dueSoon = array_filter($borrowedBooks, function($book) {
+                                        return $book['status'] === 'borrowed' && strtotime($book['due_date']) <= strtotime('+3 days');
+                                    });
+                                    echo count($dueSoon);
+                                    ?>
+                                </p>
+                            </div>
+                            <div class="p-3 bg-orange-100 rounded-full">
+<!--                                <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>-->
+<!--                                </svg>-->
+                                <img src="assets/icons8-future-100.png" alt="Due Soon Icon"
+                                     class="w-10 h-10 text-orange-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 p-6 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-lg font-medium text-green-600">Total Borrowed</p>
+                                <p class="text-2xl font-bold text-green-900"><?php echo count($borrowedBooks); ?></p>
+                            </div>
+                            <div class="p-3 bg-green-100 rounded-full">
+<!--                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>-->
+<!--                                </svg>-->
+                                <img src="pages/assets/icons8-increase-100.png" alt="Total Borrowed Icon"
+                                     class="w-10 h-10 text-green-600">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Borrowed Books Table -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">My Borrowed Books</h2>
+                        <p class="text-sm text-gray-600 mt-1">Track your borrowed books and due dates</p>
+                    </div>
 
+                    <?php if (empty($borrowedBooks)): ?>
+                        <div class="px-6 py-8 text-center">
+                            <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No borrowed books</h3>
+                                <p class="mt-1 text-sm text-gray-500">Start by borrowing some books from our collection.</p>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Details</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Left</th>
+                                </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                <?php foreach ($borrowedBooks as $borrowedBook): ?>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($borrowedBook['title']); ?></div>
+                                                    <div class="text-sm text-gray-500">by <?php echo htmlspecialchars($borrowedBook['author']); ?></div>
+                                                    <div class="text-xs text-gray-400"><?php echo htmlspecialchars($borrowedBook['category']); ?></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <?php echo date('M j, Y', strtotime($borrowedBook['borrow_date'])); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <?php echo date('M j, Y', strtotime($borrowedBook['due_date'])); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <?php
+                                            $today = date('Y-m-d');
+                                            $dueDate = $borrowedBook['due_date'];
+                                            $daysLeft = (strtotime($dueDate) - strtotime($today)) / (60 * 60 * 24);
+
+                                            // Determine status and animation colors based on exact status values
+                                            if ($borrowedBook['status'] === 'returned') {
+                                                $statusClass = 'bg-gray-100 text-gray-800';
+                                                $statusText = 'Returned';
+                                                $animationClass = 'bg-gray-400 opacity-75';
+                                                $dotClass = 'bg-gray-500';
+                                            } elseif ($borrowedBook['status'] === 'overdue') {
+                                                $statusClass = 'bg-red-100 text-red-800';
+                                                $statusText = 'Overdue';
+                                                $animationClass = 'bg-red-400 opacity-75';
+                                                $dotClass = 'bg-red-500';
+                                            } elseif ($borrowedBook['status'] === 'borrowed') {
+                                                $statusClass = 'bg-green-100 text-green-800';
+                                                $statusText = 'Borrowed';
+                                                $animationClass = 'bg-green-400 opacity-75';
+                                                $dotClass = 'bg-green-500';
+                                            } else {
+                                                // Fallback for any unexpected status
+                                                $statusClass = 'bg-gray-100 text-gray-800';
+                                                $statusText = 'Unknown';
+                                                $animationClass = 'bg-gray-400 opacity-75';
+                                                $dotClass = 'bg-gray-500';
+                                            }
+                                            ?>
+                                            <span class="px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
+                                                <span class="relative flex size-3 mr-2">
+                                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full <?php echo $animationClass; ?>"></span>
+                                                     <span class="relative inline-flex size-3 rounded-full <?php echo $dotClass; ?>"></span>
+                                                    </span>
+                                                    <?php echo $statusText; ?>
+                                                </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <?php
+                                            $daysLeft = ceil((strtotime($borrowedBook['due_date']) - time()) / (60 * 60 * 24));
+                                            if ($daysLeft > 0) {
+                                                echo "<span class='text-green-600'>$daysLeft days left</span>";
+                                            } elseif ($daysLeft == 0) {
+                                                echo "<span class='text-orange-600'>Due today</span>";
+                                            } else {
+                                                echo "<span class='text-red-600'>" . abs($daysLeft) . " days overdue</span>";
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- Search Books Section -->
             <div id="search-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Search Books</h1>
+
+                <!-- Add this right after <main class="flex-1 overflow-auto p-6"> -->
+                <?php if (isset($borrow_success)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <?php echo htmlspecialchars($borrow_success); ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($borrow_errors) && !empty($borrow_errors)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            Please fix the following errors:
+                        </div>
+                        <ul class="list-disc list-inside">
+                            <?php foreach ($borrow_errors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
 
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <form method="GET" action="">
@@ -718,16 +945,15 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                                         <?php echo htmlspecialchars($book['category']); ?> •
                                         <?php echo $book['available_copies'] > 0 ? 'Available (' . $book['available_copies'] . ')' : 'Borrowed'; ?>
                                     </p>
-                                    <?php if ($book['available_copies'] > 0): ?>
-                                        <button onclick="borrowBook(<?php echo $book['id']; ?>)"
-                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                                            Borrow Book
+                                    <!-- In your book display sections, replace the borrow button with: -->
+                                    <form method="POST" action="" style="display: inline;">
+                                        <input type="hidden" name="book_id" value="<?php echo $book['id']; ?>">
+                                        <button type="submit" name="borrow_book"
+                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                                <?php echo ($book['available_copies'] <= 0) ? 'disabled' : ''; ?>>
+                                            <?php echo ($book['available_copies'] <= 0) ? 'Not Available' : 'Borrow Book'; ?>
                                         </button>
-                                    <?php else: ?>
-                                        <button class="w-full px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-lg cursor-not-allowed" disabled>
-                                            Currently Borrowed
-                                        </button>
-                                    <?php endif; ?>
+                                    </form>
                                 </div>
                             </div>
                         <?php endforeach; ?>
