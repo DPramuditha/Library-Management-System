@@ -35,19 +35,19 @@
   <table>
     <tr>
       <td align="center">
-        <img src="https://media.giphy.com/media/l4FGuhL4U2WyjdkaY/giphy.gif" width="90" height="90"><br>
+        <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGczbWIza2c4OHJ5MnU4aWxleG94eWVxMmVvOXl2cmpsYTV6Y3NiciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LMcB8XospGZO8UQq87/giphy.gif" width="150" height="150"><br>
         <b>Student Portal</b><br/><sub>Search & view book info</sub>
       </td>
       <td align="center">
-        <img src="https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif" width="90" height="90"><br>
+        <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNWhqamthbDdxcTg1MGZkajYybnV3aDc3d3pxYWxoajZ3cnFvM2U1NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/f3iwJFOVOwuy7K6FFw/giphy.gif" width="150" height="150"><br>
         <b>Librarian Panel</b><br/><sub>Manage books & members</sub>
       </td>
       <td align="center">
-        <img src="https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif" width="90" height="90"><br>
+        <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzg4MWxxcDAwaHdnbmxtOXk4Mzl6dGF2MnpudjVka3N5YXR4cDdkdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/JqDcpPX8vWahUny0pE/giphy.gif" width="150" height="150"><br>
         <b>Issue / Return</b><br/><sub>Track borrow records</sub>
       </td>
       <td align="center">
-        <img src="https://media.giphy.com/media/du3J3cXyzhj75IOgvA/giphy.gif" width="90" height="90"><br>
+        <img src="https://media.giphy.com/media/du3J3cXyzhj75IOgvA/giphy.gif" width="150" height="150"><br>
         <b>Reports</b><br/><sub>Basic usage stats</sub>
       </td>
     </tr>
