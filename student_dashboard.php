@@ -224,6 +224,56 @@ function getBorrowedBooks($conn, $userId) {
 
 // Get borrowed books for current user
 $borrowedBooks = getBorrowedBooks($conn, $userId);
+
+// Handle return book action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
+    $book_id = (int)$_POST['book_id'];
+    $user_id = $_SESSION['user_id'];
+
+    try {
+        // Start transaction
+        $conn->begin_transaction();
+
+        // Update the borrowing record to returned status
+        $stmt = $conn->prepare("
+            UPDATE borrowed_books
+            SET status = 'returned', return_date = CURRENT_DATE
+            WHERE id = ? AND user_id = ? AND status = 'borrowed'
+        ");
+        $stmt->bind_param("ii", $book_id, $user_id);
+        $stmt->execute();
+
+        // Get the book_id from the borrowed_books record to update available copies
+        $getBookStmt = $conn->prepare("SELECT book_id FROM borrowed_books WHERE id = ?");
+        $getBookStmt->bind_param("i", $book_id);
+        $getBookStmt->execute();
+        $bookResult = $getBookStmt->get_result();
+        $bookData = $bookResult->fetch_assoc();
+
+        if ($bookData) {
+            // Increase available copies
+            $updateBookStmt = $conn->prepare("
+                UPDATE books
+                SET available_copies = available_copies + 1
+                WHERE id = ?
+            ");
+            $updateBookStmt->bind_param("i", $bookData['book_id']);
+            $updateBookStmt->execute();
+        }
+
+        // Commit transaction
+        $conn->commit();
+
+        $return_success = "Book returned successfully!";
+
+        // Refresh the borrowed books data
+        $borrowedBooks = getBorrowedBooks($conn, $user_id);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        $return_errors[] = "Error returning book: " . $e->getMessage();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -677,7 +727,6 @@ $borrowedBooks = getBorrowedBooks($conn, $userId);
             </div>
 
             <!-- Borrowed Books Section -->
-            <!-- Replace your borrowed-section div with: -->
             <div id="borrowed-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">My Borrowed Books</h1>
 
@@ -773,6 +822,7 @@ $borrowedBooks = getBorrowedBooks($conn, $userId);
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Left</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -843,6 +893,26 @@ $borrowedBooks = getBorrowedBooks($conn, $userId);
                                             }
                                             ?>
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <?php if ($borrowedBook['status'] === 'borrowed'): ?>
+                                                <form method="POST" action="" class="inline-block">
+                                                    <input type="hidden" name="book_id" value="<?php echo $borrowedBook['id']; ?>">
+                                                    <input type="hidden" name="return_book" value="1">
+                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 shadow-md bg-green-500 text-white text-xs font-medium rounded-md hover:bg-lime-600 transition-all duration-200 hover:scale-105">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 mr-2">
+                                                            <path fill-rule="evenodd" d="M12 5.25c1.213 0 2.415.046 3.605.135a3.256 3.256 0 0 1 3.01 3.01c.044.583.077 1.17.1 1.759L17.03 8.47a.75.75 0 1 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 0 0-1.06-1.06l-1.752 1.751c-.023-.65-.06-1.296-.108-1.939a4.756 4.756 0 0 0-4.392-4.392 49.422 49.422 0 0 0-7.436 0A4.756 4.756 0 0 0 3.89 8.282c-.017.224-.033.447-.046.672a.75.75 0 1 0 1.497.092c.013-.217.028-.434.044-.651a3.256 3.256 0 0 1 3.01-3.01c1.19-.09 2.392-.135 3.605-.135Zm-6.97 6.22a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.752-1.751c.023.65.06 1.296.108 1.939a4.756 4.756 0 0 0 4.392 4.392 49.413 49.413 0 0 0 7.436 0 4.756 4.756 0 0 0 4.392-4.392c.017-.223.032-.447.046-.672a.75.75 0 0 0-1.497-.092c-.013.217-.028.434-.044.651a3.256 3.256 0 0 1-3.01 3.01 47.953 47.953 0 0 1-7.21 0 3.256 3.256 0 0 1-3.01-3.01 47.759 47.759 0 0 1-.1-1.759L6.97 15.53a.75.75 0 0 0 1.06-1.06l-3-3Z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Return Book
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
+                                                </svg>
+
+                                            <?php endif; ?>
+                                        </td>
+
                                     </tr>
                                 <?php endforeach; ?>
                                 </tbody>
