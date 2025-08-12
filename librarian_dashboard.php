@@ -1,6 +1,32 @@
 <?php
 session_start();
 
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+    // User is not logged in, redirect to login page
+    header('Location: login.php');
+    exit();
+}
+
+// Check if user has librarian role
+if ($_SESSION['role'] !== 'librarian') {
+    // User is not a librarian, redirect to appropriate dashboard or login
+    if ($_SESSION['role'] === 'student') {
+        header('Location: student_dashboard.php');
+    } else {
+        header('Location: login.php');
+    }
+    exit();
+}
+
+// Handle logout request
+if (isset($_POST['logout']) && $_POST['logout'] == '1') {
+    // Destroy session and redirect to login
+    session_destroy();
+    header('Location: login.php');
+    exit();
+}
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -153,6 +179,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_book'])) {
     }
 }
 
+$userId = $_SESSION['user_id'] ?? 1;
+$userQuery = $conn->prepare("SELECT * FROM users WHERE id = ?");
+$userQuery->bind_param("i", $userId);
+$userQuery->execute();
+$userResult = $userQuery->get_result();
+$userData = $userResult->fetch_assoc();
+$userQuery->close();
+
+
+
 $conn->close();
 ?>
 
@@ -227,10 +263,11 @@ $conn->close();
                         </svg>
                         <span class="text-md font-medium">Borrowing Details</span>
                     </a>
-                    <div>
+                    <div class="mb-6 mt-4">
                         <img src="pages/assets/L_dashborad.jpg" class="w-full h-60 object-cover rounded-lg shadow-md" alt="Dashboard Image">
                     </div>
-                    <a href="#" onclick="logout()" class="flex items-center px-3 py-2 rounded-lg hover:bg-red-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="logout.php" onclick="return confirm('Are you sure you want to logout?')"
+                       class="flex items-center px-3 py-2 rounded-lg hover:bg-red-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <img src="assets/user-logout.svg" alt="Logout Icon" class="h-6 w-6 mr-2">
                         <span class="text-base font-medium">Logout</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -238,7 +275,6 @@ $conn->close();
                             <path stroke-linecap="round" stroke-linejoin="round"
                                   d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"/>
                         </svg>
-
                     </a>
                 </nav>
             </div>
@@ -288,11 +324,11 @@ $conn->close();
                             D
                         </div>
                         <div class="hidden md:block text-sm font-medium">
-                            <p>Dimuthu Pramuditha</p>
-                            <p class="text-xs text-gray-500">Librarian Email: dimuthu01@gmail.com</p>
+                            <p><?php echo htmlspecialchars($userData['name']); ?></p>
+                            <p class="text-xs text-gray-500">Librarian Email:  <?php echo htmlspecialchars($userData['email']); ?></p>
                         </div>
                     </button>
-                    <button class=" hidden lg:flex items-center px-3 py-2 rounded-lg hover:bg-gray-300 hover:transform duration-300 hover:scale-95">
+                    <button class=" hidden lg:flex items-center px-3 py-2 rounded-lg hover:bg-red-400 hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
                             <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
                         </svg>
@@ -394,8 +430,6 @@ $conn->close();
                         <div class="flex items-center">
                             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <?php echo htmlspecialchars($success); ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -406,8 +440,6 @@ $conn->close();
                         <div class="flex items-center mb-2">
                             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                            </svg>
-                            <strong>Please fix the following errors:</strong>
                         </div>
                         <ul class="list-disc list-inside">
                             <?php foreach ($errors as $error): ?>
@@ -613,7 +645,7 @@ $conn->close();
                             <div>
                                 <button type="submit" class="w-full flex justify-center rounded-md bg-indigo-600 p-3 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transition-all duration-300">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
-                                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
+                                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                                     </svg>
                                     Add New Book
                                 </button>
@@ -641,8 +673,6 @@ $conn->close();
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <?php echo htmlspecialchars($book_success); ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -653,8 +683,6 @@ $conn->close();
                         <div class="flex items-center mb-2">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                            </svg>
-                            Please fix the following errors:
                         </div>
                         <ul class="list-disc list-inside">
                             <?php foreach ($book_errors as $error): ?>
@@ -933,7 +961,19 @@ $conn->close();
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            window.location.href = 'login.html';
+            // Create a form to handle logout properly
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'logout';
+            input.value = '1';
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
         }
     }
 </script>
@@ -1061,42 +1101,8 @@ $conn->close();
             }
         });
     }
-
-    function showSection(sectionName) {
-        // Hide all content sections
-        const sections = document.querySelectorAll('.content-section');
-        sections.forEach(section => {
-            section.classList.add('hidden');
-        });
-
-        // Show selected section
-        document.getElementById(sectionName + '-section').classList.remove('hidden');
-
-        // Re-initialize charts when showing home section
-        if (sectionName === 'home') {
-            setTimeout(() => {
-                initializeCharts();
-            }, 100);
-        }
-
-        // Update active navigation item
-        const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.classList.remove('bg-blue-500', 'text-white');
-        });
-
-        // Add active class to clicked nav item
-        if (event && event.target) {
-            event.target.closest('a').classList.add('bg-blue-500', 'text-white');
-        }
-    }
-
-    function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            window.location.href = 'login.html';
-        }
-    }
 </script>
 <script src="main.js"></script>
 </body>
 </html>
+

@@ -1,74 +1,70 @@
 <?php
-    session_start();
+session_start();
 
-    $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "libraryMS";
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "libraryMS";
 
-    $conn  = new mysqli($servername, $username, $password, $dbname);
-    if($conn -> connect_error){
-        die("Connection failed: " . $conn->connect_error);
+$conn = new mysqli($servername, $username, $password, $dbname);
+if($conn->connect_error){
+    die("Connection failed: " . $conn->connect_error);
+}
 
+// Check if the form is submitted
+if($_SERVER['REQUEST_METHOD'] === 'POST'){
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+
+    // Validate inputs
+    $errors = [];
+    if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+        $errors[] = "Valid email is required";
     }
-    // Check if the form is submitted
-    if($_SERVER['REQUEST_METHOD'] === 'POST'){
-        $email = trim($_POST['email']);
-        $password = $_POST['password'];
+    if(strlen($password) < 6){
+        $errors[] = "Password must be at least 6 characters";
+    }
 
+    if(empty($errors)){
+        $stmt = $conn->prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        // Validate inputs
-        $errors = [];
-        if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-            $errors[] = "Valid email is required";
+        if($result->num_rows === 1){
+            $user = $result->fetch_assoc();
 
-        }
-        if(strlen($password) < 6){
-            $errors[] = "Password must be at least 6 characters";
+            if(password_verify($password, $user['password'])) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['role'] = $user['role']; // FIXED: Changed from 'user_role' to 'role'
+                $_SESSION['logged_in'] = true;
 
-        }
-        if(empty($errors)){
-            $stmt = $conn-> prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
-            $stmt -> bind_param("s", $email);
-            $stmt -> execute();
-            $result = $stmt-> get_result();
-
-            if($result->num_rows === 1){
-                $user = $result-> fetch_assoc();
-
-                if(password_verify($password, $user['password'])) {
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['user_name'] = $user['name'];
-                    $_SESSION['user_email'] = $user['email'];
-                    $_SESSION['user_role'] = $user['role'];
-                    $_SESSION['logged_in'] = true;
-
-                    if ($user['role'] === 'librarian') {
-                        header("Location: librarian_dashboard.php");
-
-                    } else {
-                        header("Location: student_dashboard.php");
-
-                    }
-                    exit;
-                }else{
-                    $errors[] = "Invalid email or password";
+                if ($user['role'] === 'librarian') {
+                    header("Location: librarian_dashboard.php");
+                } else {
+                    header("Location: student_dashboard.php");
                 }
+                exit(); // FIXED: Added exit() after header redirect
             }else{
-                $errors[] = "No user found with this email or account is inactive";
+                $errors[] = "Invalid email or password";
             }
-            $stmt->close();
+        }else{
+            $errors[] = "No user found with this email or account is inactive";
         }
-        $_SESSION['login_errors'] = $errors;
-        $_SESSION['login_email'] = $email;
+        $stmt->close();
     }
-    $errors = $_SESSION['login_errors'] ?? [];
-    $email = $_SESSION['login_email'] ?? '';
-    unset($_SESSION['login_errors'], $_SESSION['login_email']);
+    $_SESSION['login_errors'] = $errors;
+    $_SESSION['login_email'] = $email;
+}
 
-    $conn->close();
+$errors = $_SESSION['login_errors'] ?? [];
+$email = $_SESSION['login_email'] ?? '';
+unset($_SESSION['login_errors'], $_SESSION['login_email']);
 
-    ?>
+$conn->close();
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -90,8 +86,7 @@
         <div class="bg-white rounded-lg shadow-2xl p-4 sm:p-6 lg:p-8 hover:shadow-lg transition-shadow duration-300 max-w-md w-full mx-auto">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
                 <img src="assets/books.gif" alt="Your Company" class="mx-auto h-20 w-auto"/>
-                <h2 class="text-center text-xl sm:text-2xl/9 font-bold tracking-tight text-gray-900">Sign in to your
-                    account</h2>
+                <h2 class="text-center text-xl sm:text-2xl/9 font-bold tracking-tight text-gray-900">Sign in to your account</h2>
             </div>
 
             <div class="mt-6 lg:mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -126,8 +121,7 @@
                         <div class="flex items-center justify-between">
                             <label for="password" class="block text-sm/6 font-medium text-gray-900">Password</label>
                             <div class="text-sm">
-                                <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot
-                                    password?</a>
+                                <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
                             </div>
                         </div>
                         <div class="mt-2">
