@@ -187,7 +187,114 @@ $userResult = $userQuery->get_result();
 $userData = $userResult->fetch_assoc();
 $userQuery->close();
 
+// Fetch borrowing details with user and book information
+$borrowings = [];
+$borrowingQuery = "
+    SELECT 
+        bb.id as borrow_id,
+        bb.user_id,
+        bb.book_id,
+        bb.borrow_date,
+        bb.due_date,
+        bb.return_date,
+        bb.status,
+        u.name as user_name,
+        u.email as user_email,
+        b.title as book_title,
+        b.author as book_author
+    FROM borrowed_books bb
+    JOIN users u ON bb.user_id = u.id
+    JOIN books b ON bb.book_id = b.id
+    ORDER BY bb.borrow_date DESC
+";
 
+$borrowingResult = $conn->query($borrowingQuery);
+if ($borrowingResult && $borrowingResult->num_rows > 0) {
+    while ($row = $borrowingResult->fetch_assoc()) {
+        $borrowings[] = $row;
+    }
+}
+
+// Handle Return Book form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
+    $borrow_id = trim($_POST['borrow_id'] ?? '');
+    $return_errors = [];
+
+    // Validation
+    if (empty($borrow_id) || !is_numeric($borrow_id)) {
+        $return_errors[] = "Invalid borrow ID";
+    }
+
+    if (empty($return_errors)) {
+        // Start transaction
+        $conn->begin_transaction();
+
+        try {
+            // Check if the borrowing record exists and is currently borrowed
+            $stmt = $conn->prepare("SELECT bb.*, b.id as book_id FROM borrowed_books bb JOIN books b ON bb.book_id = b.id WHERE bb.id = ? AND bb.status = 'borrowed'");
+            $stmt->bind_param("i", $borrow_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                $borrowing = $result->fetch_assoc();
+
+                // Update borrowing record to returned
+                $updateBorrowStmt = $conn->prepare("UPDATE borrowed_books SET status = 'returned', return_date = NOW() WHERE id = ?");
+                $updateBorrowStmt->bind_param("i", $borrow_id);
+
+                // Update book available copies
+                $updateBookStmt = $conn->prepare("UPDATE books SET available_copies = available_copies + 1 WHERE id = ?");
+                $updateBookStmt->bind_param("i", $borrowing['book_id']);
+
+                if ($updateBorrowStmt->execute() && $updateBookStmt->execute()) {
+                    $conn->commit();
+                    $return_success = "Book returned successfully!";
+
+                    // Refresh borrowings data
+                    $borrowings = [];
+                    $borrowingQuery = "
+                        SELECT
+                            bb.id as borrow_id,
+                            bb.user_id,
+                            bb.book_id,
+                            bb.borrow_date,
+                            bb.due_date,
+                            bb.return_date,
+                            bb.status,
+                            u.name as user_name,
+                            u.email as user_email,
+                            b.title as book_title,
+                            b.author as book_author
+                        FROM borrowed_books bb
+                        JOIN users u ON bb.user_id = u.id
+                        JOIN books b ON bb.book_id = b.id
+                        ORDER BY bb.borrow_date DESC
+                    ";
+
+                    $borrowingResult = $conn->query($borrowingQuery);
+                    if ($borrowingResult && $borrowingResult->num_rows > 0) {
+                        while ($row = $borrowingResult->fetch_assoc()) {
+                            $borrowings[] = $row;
+                        }
+                    }
+                } else {
+                    $conn->rollback();
+                    $return_errors[] = "Error processing return: " . $conn->error;
+                }
+
+                $updateBorrowStmt->close();
+                $updateBookStmt->close();
+            } else {
+                $return_errors[] = "Borrowing record not found or already returned";
+            }
+            $stmt->close();
+        } catch (Exception $e) {
+            $conn->rollback();
+            $return_errors[] = "Error processing return: " . $e->getMessage();
+        }
+    }
+}
 
 $conn->close();
 ?>
@@ -328,11 +435,12 @@ $conn->close();
                             <p class="text-xs text-gray-500">Librarian Email:  <?php echo htmlspecialchars($userData['email']); ?></p>
                         </div>
                     </button>
-                    <button class=" hidden lg:flex items-center px-3 py-2 rounded-lg hover:bg-red-400 hover:transform duration-300 hover:scale-95">
+                    <a href="logout.php" onclick="return confirm('Are you sure you want to logout?')"
+                       class="hidden lg:flex items-center px-3 py-2 rounded-lg hover:bg-red-400 hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
                             <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
                         </svg>
-                    </button>
+                    </a>
                 </div>
             </div>
         </header>
@@ -430,6 +538,8 @@ $conn->close();
                         <div class="flex items-center">
                             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold"><?php echo htmlspecialchars($success); ?></p>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -440,6 +550,8 @@ $conn->close();
                         <div class="flex items-center mb-2">
                             <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold">Please fix the following errors:</p>
                         </div>
                         <ul class="list-disc list-inside">
                             <?php foreach ($errors as $error): ?>
@@ -604,15 +716,15 @@ $conn->close();
                         <form action="#" method="POST" class="space-y-6">
                             <div>
                                 <label for="title" class="block text-sm font-medium text-gray-900">Book Title</label>
-                                <input id="title" type="text" name="title" required autocomplete="title" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="title" type="text"  required autocomplete="title" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="author" class="block text-sm font-medium text-gray-900">Book Author</label>
-                                <input id="author" type="text" name="author" required autocomplete="author" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="author" type="text"  required autocomplete="author" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="category" class="block text-sm font-medium text-gray-900">Book Category</label>
-                                <input id="category" type="text" name="category" required autocomplete="category" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="category" type="text"  required autocomplete="category" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="description" class="block text-sm font-medium text-gray-900">Book Description</label>
@@ -624,15 +736,15 @@ $conn->close();
                             </div>
                             <div>
                                 <label for="publisher" class="block text-sm font-medium text-gray-900">Book Publisher</label>
-                                <input id="publisher" type="text" name="publisher" required autocomplete="publisher" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="publisher" type="text"  required autocomplete="publisher" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="total_copies" class="block text-sm font-medium text-gray-900">Book Total Copies</label>
-                                <input id="total_copies" type="number" name="total_copies" required autocomplete="total_copies" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="total_copies" type="number"  required autocomplete="total_copies" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="available_copies" class="block text-sm font-medium text-gray-900">Book Available Copies</label>
-                                <input id="available_copies" type="number" name="available_copies" required autocomplete="available_copies" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="available_copies" type="number"  required autocomplete="available_copies" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="status" class="block text-sm font-medium text-gray-900">Books Status</label>
@@ -673,6 +785,8 @@ $conn->close();
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold">Book information updated successfully!</p>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -683,10 +797,12 @@ $conn->close();
                         <div class="flex items-center mb-2">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold">There were errors updating the book information:</p>
                         </div>
                         <ul class="list-disc list-inside">
                             <?php foreach ($book_errors as $error): ?>
-                                <li><?php echo htmlspecialchars($error); ?></li>
+                                <li class="text-sm font-mono font-bold"><?php echo htmlspecialchars($error); ?></li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
@@ -881,58 +997,172 @@ $conn->close();
                 </div>
             </div>
 
+
             <!-- Borrowing Section -->
             <div id="borrowing-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Books Borrowing Details</h1>
+
+                <!-- Add this right after the borrowing section title -->
+                <!-- Success Message for Book Return -->
+                <?php if (isset($return_success)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold"><?php echo htmlspecialchars($return_success); ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Error Messages for Book Return -->
+                <?php if (isset($return_errors) && !empty($return_errors)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold">Error processing return:</p>
+                        </div>
+                        <ul class="list-disc list-inside">
+                            <?php foreach ($return_errors as $error): ?>
+                                <li class="text-sm font-mono font-bold"><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-900">Borrowing Details</h2>
+                        <p class="text-sm text-gray-600 mt-1">Total Borrowing Records: <?php echo count($borrowings); ?></p>
                     </div>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                        <tr class="hover:bg-gray-50 transition-colors duration-200">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#B001</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#001</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#001</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023/10/01</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023/10/15</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    <span class="relative flex size-3 mr-2">
-                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                                    <span class="relative inline-flex size-3 rounded-full bg-green-500"></span>
-                                </span>
-                                    Returned
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                <button  class="inline-flex items-center px-3 py-1.5 shadow-md bg-green-500 text-white text-xs font-medium rounded-md hover:bg-lime-600 transition-all duration-200 hover:scale-105">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
-                                        <path fill-rule="evenodd" d="M12 5.25c1.213 0 2.415.046 3.605.135a3.256 3.256 0 0 1 3.01 3.01c.044.583.077 1.17.1 1.759L17.03 8.47a.75.75 0 1 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 0 0-1.06-1.06l-1.752 1.751c-.023-.65-.06-1.296-.108-1.939a4.756 4.756 0 0 0-4.392-4.392 49.422 49.422 0 0 0-7.436 0A4.756 4.756 0 0 0 3.89 8.282c-.017.224-.033.447-.046.672a.75.75 0 1 0 1.497.092c.013-.217.028-.434.044-.651a3.256 3.256 0 0 1 3.01-3.01c1.19-.09 2.392-.135 3.605-.135Zm-6.97 6.22a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.752-1.751c.023.65.06 1.296.108 1.939a4.756 4.756 0 0 0 4.392 4.392 49.413 49.413 0 0 0 7.436 0 4.756 4.756 0 0 0 4.392-4.392c.017-.223.032-.447.046-.672a.75.75 0 0 0-1.497-.092c-.013.217-.028.434-.044.651a3.256 3.256 0 0 1-3.01 3.01 47.953 47.953 0 0 1-7.21 0 3.256 3.256 0 0 1-3.01-3.01 47.759 47.759 0 0 1-.1-1.759L6.97 15.53a.75.75 0 0 0 1.06-1.06l-3-3Z" clip-rule="evenodd" />
-                                    </svg>
-                                    Return
-                                </button>
-                                <button class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-200 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
-                                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clip-rule="evenodd" />
-                                    </svg>
-                                    Overdue
-                                </button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+
+                    <?php if (empty($borrowings)): ?>
+                        <div class="px-6 py-8 text-center">
+                            <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No borrowing records</h3>
+                                <p class="mt-1 text-sm text-gray-500">No books have been borrowed yet.</p>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Details</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                <?php foreach ($borrowings as $borrowing): ?>
+                                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            #<?php echo str_pad($borrowing['borrow_id'], 3, '0', STR_PAD_LEFT); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($borrowing['user_name']); ?></div>
+                                            <div class="text-sm text-gray-500"><?php echo htmlspecialchars($borrowing['user_email']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($borrowing['book_title']); ?></div>
+                                            <div class="text-sm text-gray-500">by <?php echo htmlspecialchars($borrowing['book_author']); ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php echo date('M d, Y', strtotime($borrowing['borrow_date'])); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php
+                                            $due_date = date('M d, Y', strtotime($borrowing['due_date']));
+                                            $is_overdue = strtotime($borrowing['due_date']) < time() && $borrowing['status'] == 'borrowed';
+                                            ?>
+                                            <span class="<?php echo $is_overdue ? 'text-red-600 font-semibold' : ''; ?>">
+                                        <?php echo $due_date; ?>
+                                    </span>
+                                            <?php if ($is_overdue): ?>
+                                                <div class="text-xs text-red-500">OVERDUE</div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php echo $borrowing['return_date'] ? date('M d, Y', strtotime($borrowing['return_date'])) : '-'; ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <?php
+                                            $statusClass = '';
+                                            $statusText = '';
+                                            $animationClass = '';
+                                            $dotClass = '';
+
+                                            switch($borrowing['status']) {
+                                                case 'borrowed':
+                                                    if (strtotime($borrowing['due_date']) < time()) {
+                                                        $statusClass = 'bg-red-100 text-red-800';
+                                                        $statusText = 'Overdue';
+                                                        $animationClass = 'bg-red-400 opacity-75';
+                                                        $dotClass = 'bg-red-500';
+                                                    } else {
+                                                        $statusClass = 'bg-yellow-100 text-yellow-800';
+                                                        $statusText = 'Borrowed';
+                                                        $animationClass = 'bg-yellow-400 opacity-75';
+                                                        $dotClass = 'bg-yellow-500';
+                                                    }
+                                                    break;
+                                                case 'returned':
+                                                    $statusClass = 'bg-green-100 text-green-800';
+                                                    $statusText = 'Returned';
+                                                    $animationClass = 'bg-green-400 opacity-75';
+                                                    $dotClass = 'bg-green-500';
+                                                    break;
+                                                default:
+                                                    $statusClass = 'bg-gray-100 text-gray-800';
+                                                    $statusText = 'Unknown';
+                                                    $animationClass = 'bg-gray-400 opacity-75';
+                                                    $dotClass = 'bg-gray-500';
+                                            }
+                                            ?>
+                                            <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
+                                        <span class="relative flex size-3 mr-2">
+                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full <?php echo $animationClass; ?>"></span>
+                                            <span class="relative inline-flex size-3 rounded-full <?php echo $dotClass; ?>"></span>
+                                        </span>
+                                        <?php echo $statusText; ?>
+                                    </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                            <!-- In the borrowing section table, replace the Mark Returned button with this: -->
+                                            <?php if ($borrowing['status'] == 'borrowed'): ?>
+                                                <form method="POST" action="" style="display: inline;">
+                                                    <input type="hidden" name="borrow_id" value="<?php echo $borrowing['borrow_id']; ?>">
+                                                    <button type="submit" name="return_book"
+                                                            onclick="return confirm('Are you sure you want to mark this book as returned?')"
+                                                            class="inline-flex items-center px-3 py-1.5 shadow-md bg-green-500 text-white text-xs font-medium rounded-md hover:bg-lime-600 transition-all duration-200 hover:scale-105">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+                                                        </svg>
+                                                        Mark Returned
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-500">
+                                                Already Returned
+                                            </span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>
