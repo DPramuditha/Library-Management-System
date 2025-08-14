@@ -333,3 +333,22 @@ function fillUpdateForm(book) {
     // Scroll to form
     document.querySelector('input[name="book_id"]').scrollIntoView({behavior: 'smooth'});
 }
+
+//  Function to handle book deletion
+function deleteBook(bookId) {
+    if (confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'delete.php';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'book_id';
+        input.value = bookId;
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}

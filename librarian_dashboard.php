@@ -470,7 +470,7 @@ $conn->close();
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Members</h3>
-                                <p class="text-3xl font-bold text-blue-600">147</p>
+                                <p class="text-3xl font-bold text-blue-600"><?php echo count($users); ?></p>
                                 <p class="text-sm text-blue-500 mt-1">Active library users</p>
                             </div>
                             <div class="bg-blue-300 p-3 rounded-full">
@@ -484,7 +484,7 @@ $conn->close();
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Books</h3>
-                                <p class="text-3xl font-bold text-green-600">1,245</p>
+                                <p class="text-3xl font-bold text-green-600"><?php echo count($books); ?></p>
                                 <p class="text-sm text-green-500 mt-1">Ready to borrow</p>
                             </div>
                             <div class="bg-green-500 p-3 rounded-full">
@@ -497,8 +497,8 @@ $conn->close();
                     <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Due Soon</h3>
-                                <p class="text-3xl font-bold text-orange-600">23</p>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Borrowing</h3>
+                                <p class="text-3xl font-bold text-orange-600"><?php echo count($borrowings); ?></p>
                                 <p class="text-sm text-orange-500 mt-1">Within 3 days</p>
                             </div>
                             <div class="bg-orange-500 p-3 rounded-full">
@@ -834,6 +834,29 @@ $conn->close();
             <div id="maintainbooks-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Maintain Books</h1>
 
+                <!-- Delete Success/Error Messages -->
+                <?php if (isset($_SESSION['delete_message'])): ?>
+                    <div class="mb-6 p-4 rounded-lg <?php echo $_SESSION['delete_success'] ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'; ?>">
+                        <div class="flex items-center">
+                            <?php if ($_SESSION['delete_success']): ?>
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            <?php else: ?>
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                            <?php endif; ?>
+                            <p class="text-sm font-mono font-bold"><?php echo htmlspecialchars($_SESSION['delete_message']); ?></p>
+                        </div>
+                    </div>
+                    <?php
+                    // Clear the session messages after displaying
+                    unset($_SESSION['delete_message']);
+                    unset($_SESSION['delete_success']);
+                    ?>
+                <?php endif; ?>
+
                 <!-- Success Message for Book Update -->
                 <?php if (isset($book_success)): ?>
                     <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
@@ -1036,8 +1059,9 @@ $conn->close();
                                                 </svg>
                                                 Update
                                             </button>
-                                            <button onclick="deleteBook(<?php echo $book['id']; ?>, '<?php echo htmlspecialchars($book['title']); ?>')" class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <button onclick="deleteBook(<?php echo $book['id']; ?>)"
+                                                    class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-1">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                 </svg>
                                                 Delete
