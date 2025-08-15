@@ -296,6 +296,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
     }
 }
 
+// Handle Update User form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
+    $user_id = trim($_POST['user_id'] ?? '');
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $role = trim($_POST['role'] ?? '');
+
+    $user_errors = [];
+
+    // Validation
+    if (empty($user_id) || !is_numeric($user_id)) {
+        $user_errors[] = "Valid User ID is required";
+    }
+    if (empty($name)) {
+        $user_errors[] = "Name is required";
+    }
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $user_errors[] = "Valid email is required";
+    }
+    if (empty($phone)) {
+        $user_errors[] = "Phone number is required";
+    }
+    if (empty($address)) {
+        $user_errors[] = "Address is required";
+    }
+    if (empty($role) || !in_array($role, ['student', 'librarian'])) {
+        $user_errors[] = "Please select a valid role";
+    }
+
+    if (empty($user_errors)) {
+        // Check if user exists
+        $stmt = $conn->prepare("SELECT id, email FROM users WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $existing_user = $result->fetch_assoc();
+
+            // Check if email is already taken by another user
+            $emailStmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+            $emailStmt->bind_param("si", $email, $user_id);
+            $emailStmt->execute();
+            $emailResult = $emailStmt->get_result();
+
+            if ($emailResult->num_rows > 0) {
+                $user_errors[] = "Email is already in use by another user";
+            } else {
+                // Update user information
+                $updateStmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ?, role = ? WHERE id = ?");
+                $updateStmt->bind_param("sssssi", $name, $email, $phone, $address, $role, $user_id);
+
+                if ($updateStmt->execute()) {
+                    $user_success = "User information updated successfully!";
+                    // Refresh users data
+                    $users = [];
+                    $usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users ORDER BY created_at DESC";
+                    $usersResult = $conn->query($usersQuery);
+                    if ($usersResult && $usersResult->num_rows > 0) {
+                        while ($row = $usersResult->fetch_assoc()) {
+                            $users[] = $row;
+                        }
+                    }
+                } else {
+                    $user_errors[] = "Error updating user: " . $conn->error;
+                }
+                $updateStmt->close();
+            }
+            $emailStmt->close();
+        } else {
+            $user_errors[] = "User not found";
+        }
+        $stmt->close();
+    }
+}
+
 $conn->close();
 ?>
 
@@ -428,7 +506,9 @@ $conn->close();
                     <button class="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                         <img src="assets/profile-placeholder.png" alt="Profile" class="h-8 w-8 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
                         <div class="h-8 w-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium" style="display: none;">
-                            D
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
                         </div>
                         <div class="hidden md:block text-sm font-medium">
                             <p><?php echo htmlspecialchars($userData['name']); ?></p>
@@ -436,7 +516,7 @@ $conn->close();
                         </div>
                     </button>
                     <a href="logout.php" onclick="return confirm('Are you sure you want to logout?')"
-                       class="hidden lg:flex items-center px-3 py-2 rounded-lg hover:bg-red-400 hover:transform duration-300 hover:scale-95">
+                       class="hidden lg:flex items-center px-3 py-2 rounded-lg hover:bg-red-400 hover:transform duration-300 hover:scale-95 cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
                             <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
                         </svg>
@@ -598,7 +678,7 @@ $conn->close();
                                 </select>
                             </div>
                             <div>
-                                <button type="submit" class="w-full flex justify-center rounded-md bg-indigo-600 p-3 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transition-all duration-300">
+                                <button type="submit" class="w-full flex justify-center rounded-md bg-indigo-600 p-3 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transition-all duration-300 cursor-pointer">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
                                         <path d="M5.25 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM2.25 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM18.75 7.5a.75.75 0 0 0-1.5 0v2.25H15a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H21a.75.75 0 0 0 0-1.5h-2.25V7.5Z" />
                                     </svg>
@@ -620,8 +700,39 @@ $conn->close();
 
 
             <!-- Manage User Section -->
+            <!-- Manage User Section -->
             <div id="manageuser-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Manage User</h1>
+
+                <!-- Success Message for User Update -->
+                <?php if (isset($user_success)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold"><?php echo htmlspecialchars($user_success); ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Error Messages for User Update -->
+                <?php if (isset($user_errors) && !empty($user_errors)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold">There were errors updating the user information:</p>
+                        </div>
+                        <ul class="list-disc list-inside">
+                            <?php foreach ($user_errors as $error): ?>
+                                <li class="text-sm font-mono font-bold"><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-900">User Management</h2>
@@ -632,7 +743,7 @@ $conn->close();
                         <div class="px-6 py-8 text-center">
                             <div class="text-gray-500">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                                 </svg>
                                 <h3 class="mt-2 text-sm font-medium text-gray-900">No users found</h3>
                                 <p class="mt-1 text-sm text-gray-500">Get started by adding a new user account.</p>
@@ -643,55 +754,36 @@ $conn->close();
                             <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($users as $user): ?>
-                                <tr class="hover:bg-gray-50 transition-colors duration-200">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #<?php echo str_pad($user['id'], 3, '0', STR_PAD_LEFT); ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <?php echo htmlspecialchars($user['name']); ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?php echo htmlspecialchars($user['email']); ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?php echo htmlspecialchars($user['phone'] ?? 'N/A'); ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $user['role'] === 'librarian' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'; ?>">
-                                    <?php echo ucfirst(htmlspecialchars($user['role'])); ?>
-                                </span>
-                                    </td>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo htmlspecialchars($user['id']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo htmlspecialchars($user['name']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo htmlspecialchars($user['email']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo htmlspecialchars($user['phone']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo htmlspecialchars($user['address']); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    <span class="relative flex size-3 mr-2">
-                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                                        <span class="relative inline-flex size-3 rounded-full bg-green-500"></span>
-                                    </span>
-                                    Active
-                                </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $user['role'] === 'librarian' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'; ?>">
+                                <?php echo htmlspecialchars(ucfirst($user['role'])); ?>
+                            </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                        <button  class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo date('M j, Y', strtotime($user['created_at'])); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button onclick="fillUpdateForm(<?php echo $user['id']; ?>, '<?php echo addslashes($user['name']); ?>', '<?php echo addslashes($user['email']); ?>', '<?php echo addslashes($user['phone']); ?>', '<?php echo addslashes($user['address']); ?>', '<?php echo $user['role']; ?>')"
+                                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 hover:scale-95">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                             Update
-                                        </button>
-                                        <button  class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                            </svg>
-                                            Delete
                                         </button>
                                     </td>
                                 </tr>
@@ -700,57 +792,63 @@ $conn->close();
                         </table>
                     <?php endif; ?>
                 </div>
+
                 <div class="mt-6 p-4 rounded-lg bg-white border border-gray-200 shadow-md">
-                <h1 class="text-2xl font-bold text-gray-900 mb-4">Managing User Information</h1>
-                <p class="text-gray-700 mb-2">You can update user information by clicking the "Update" button next to each user. This will allow you to edit their details such as name, email, phone number, and address.</p>
-                    <form action="#" method="POST" >
+                    <h1 class="text-2xl font-bold text-gray-900 mb-4">Update User Information</h1>
+                    <p class="text-gray-700 mb-4">Fill in the form below to update user information. Click on a user's "Update" button to auto-fill the form.</p>
+                    <form method="POST" action="">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">User ID</label>
-                                <input type="text" name="user_id" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input type="number" name="user_id" id="update_user_id" required
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter User ID">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                                <input type="text" name="user_name" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <label class="block text-sm font-medium text-gray-700">Name</label>
+                                <input type="text" name="name" id="update_name" required
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter Name">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Email</label>
-                                <input type="email" name="user_email" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input type="email" name="email" id="update_email" required
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter Email">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Password</label>
-                                <input type="password" name="user_password" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                                <input type="tel" name="user_phone" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <label class="block text-sm font-medium text-gray-700">Phone</label>
+                                <input type="text" name="phone" id="update_phone" required
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter Phone Number">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Address</label>
-                                <textarea name="user_address" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm"></textarea>
+                                <input type="text" name="address" id="update_address" required
+                                       class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm"
+                                       placeholder="Enter Address">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Role</label>
-                                <select name="user_role" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-600 sm:text-sm">
-                                    <option value="" disabled selected>Select Role</option>
+                                <select name="role" id="update_role" required class="p-2 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm">
+                                    <option value="">Select Role</option>
                                     <option value="student">Student</option>
                                     <option value="librarian">Librarian</option>
                                 </select>
                             </div>
                         </div>
                         <div class="flex justify-end">
-                            <button type="submit" class="col-span-1 md:col-span-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-all duration-300 hover:scale-95">
+                            <button type="submit" name="update_user" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-all duration-300 hover:scale-95 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                 </svg>
-                                Update User
+                                Update User Information
                             </button>
-                            <button type="reset" class="ml-4 bg-red-200 text-black font-semibold py-2 px-4 rounded-md hover:bg-red-600 transition-all duration-300 hover:scale-95 hover:text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 inline mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                            <button type="reset" onclick="clearUpdateForm()" class="ml-4 bg-red-200 text-black font-semibold py-2 px-4 rounded-md hover:bg-red-600 transition-all duration-300 hover:scale-95 hover:text-white cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                 </svg>
-                                Reset Form
+                                Clear Form
                             </button>
                         </div>
                     </form>
@@ -810,7 +908,7 @@ $conn->close();
                                 </select>
                             </div>
                             <div>
-                                <button type="submit" class="w-full flex justify-center rounded-md bg-indigo-600 p-3 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transition-all duration-300">
+                                <button type="submit" class="w-full flex justify-center rounded-md bg-indigo-600 p-3 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transition-all duration-300 cursor-pointer">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
                                         <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                                     </svg>
@@ -964,7 +1062,7 @@ $conn->close();
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" name="update_book" class="col-span-1 md:col-span-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-all duration-300 hover:scale-95">
+                        <button type="submit" name="update_book" class="col-span-1 md:col-span-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-all duration-300 hover:scale-95 cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                             </svg>
@@ -1053,14 +1151,14 @@ $conn->close();
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                            <button onclick="fillUpdateForm(<?php echo htmlspecialchars(json_encode($book)); ?>)" class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105">
+                                            <button onclick="fillUpdateForm(<?php echo htmlspecialchars(json_encode($book)); ?>)" class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105 cursor-pointer">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                 </svg>
                                                 Update
                                             </button>
                                             <button onclick="deleteBook(<?php echo $book['id']; ?>)"
-                                                    class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white">
+                                                    class="inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white cursor-pointer">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-1">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                 </svg>
@@ -1223,7 +1321,7 @@ $conn->close();
                                                     <input type="hidden" name="borrow_id" value="<?php echo $borrowing['borrow_id']; ?>">
                                                     <button type="submit" name="return_book"
                                                             onclick="return confirm('Are you sure you want to mark this book as returned?')"
-                                                            class="inline-flex items-center px-3 py-1.5 shadow-md bg-green-500 text-white text-xs font-medium rounded-md hover:bg-lime-600 transition-all duration-200 hover:scale-105">
+                                                            class="inline-flex items-center px-3 py-1.5 shadow-md bg-green-500 text-white text-xs font-medium rounded-md hover:bg-lime-600 transition-all duration-200 hover:scale-105 cursor-pointer">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 mr-1">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
                                                         </svg>
@@ -1287,130 +1385,7 @@ $conn->close();
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Initialize charts when the page loads
-    window.addEventListener('DOMContentLoaded', function() {
-        initializeCharts();
-    });
-
-    function initializeCharts() {
-        // Bar Chart - Books Borrowed by Category
-        const barCtx = document.getElementById('booksBarChart').getContext('2d');
-        new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Fiction', 'Science', 'History', 'Technology', 'Biography', 'Arts'],
-                datasets: [{
-                    label: 'Books Borrowed',
-                    data: [45, 32, 28, 38, 22, 15],
-                    backgroundColor: [
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5'
-                    ],
-                    borderColor: [
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5',
-                        '#4F46E5'
-                    ],
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#F3F4F6'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-
-        // Area Chart - Daily Library Activity
-        const areaCtx = document.getElementById('activityAreaChart').getContext('2d');
-        new Chart(areaCtx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Books Borrowed',
-                    data: [12, 19, 15, 25, 22, 18, 8],
-                    borderColor: '#3B82F6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#3B82F6',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6
-                }, {
-                    label: 'Books Returned',
-                    data: [8, 15, 12, 20, 18, 15, 6],
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#10B981',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#F3F4F6'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-    }
-</script>
+<script src="librarian.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
