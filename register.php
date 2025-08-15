@@ -119,7 +119,7 @@ $conn->close();
     <!-- Registration Form -->
     <div class="bg-white rounded-lg shadow-2xl p-6 sm:p-8 w-full max-w-md relative z-10">
         <div class="text-center mb-6">
-            <img src="assets/books01.gif" alt="Library Management" class="mx-auto h-25 w-auto" />
+            <img src="pages/assets/books01.gif" alt="Library Management" class="mx-auto h-25 w-auto" />
             <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Create a new account</h2>
             <p class="mt-1 text-sm text-gray-600">Please fill in the details below to register.</p>
         </div>
@@ -197,7 +197,7 @@ $conn->close();
     <div class="hidden lg:block relative">
         <div class="absolute inset-0 topography-bg opacity-30 rounded-lg"></div>
         <img
-                src="assets/register_Image.jpg"
+                src="pages/assets/register_Image.jpg"
                 alt="Register Illustration"
                 class="w-xl h-auto object-contain relative z-10"
         />
