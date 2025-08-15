@@ -300,6 +300,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
         $return_errors[] = "Error returning book: " . $e->getMessage();
     }
 }
+// Fetch all books for the dashboard
+$books = [];
+$booksQuery = "SELECT id, title, author, category, description, publication_year, publisher, total_copies, available_copies, status FROM books ORDER BY id DESC";
+$booksResult = $conn->query($booksQuery);
+
+if ($booksResult && $booksResult->num_rows > 0) {
+    while ($row = $booksResult->fetch_assoc()) {
+        $books[] = $row;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -441,13 +451,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                         <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
                     </button>
                     <!-- Profile Icon -->
-                    <button class="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button class="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
                         <img src="assets/profile-placeholder.png" alt="Profile"
                              class="h-10 w-10 rounded-full object-cover"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
                         <div class="h-8 w-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium"
                              style="display: none;">
-                            D
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
                         </div>
                         <div class="hidden md:block text-sm font-medium">
                             <p><?php echo htmlspecialchars($userData['name']); ?></p>
@@ -481,7 +493,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                     </div>
 
                     <div class="relative overflow-hidden rounded-lg shadow-md">
-                        <img src="pages/assets/S_dashboard02.jpg" alt="Digital Library"
+                        <img src="pages/assets/S_dashboard03.jpg" alt="Digital Library"
                              class="w-full h-64 object-cover transition-transform duration-700 hover:scale-110 animate-fade-in-right">
                         <div class="absolute inset-0 bg-gradient-to-l from-purple-600/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
@@ -494,7 +506,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">
                                     Total Books Borrowed</h3>
                                 <p class="text-3xl font-bold text-blue-600 group-hover:text-blue-700 transition-colors duration-300">
-                                    12</p>
+                                    <?php echo count($borrowedBooks); ?>
+                                    </p>
                             </div>
                             <div class="bg-blue-100 p-3 rounded-full group-hover:bg-blue-200 transition-colors duration-300">
                                 <img src="assets/icons8-books-96.png" alt="Books Icon"
@@ -542,7 +555,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-700 transition-colors duration-300">
                                     Available Books</h3>
                                 <p class="text-3xl font-bold text-green-600 group-hover:text-green-700 transition-colors duration-300">
-                                    1,245</p>
+                                    <?php echo count($books); ?></p>
                             </div>
                             <div class="bg-green-100 p-3 rounded-full group-hover:bg-green-200 transition-colors duration-300">
                                 <img src="assets/books03.svg" alt="Available Books Icon"
@@ -634,7 +647,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                                     <form method="POST" action="" style="display: inline;">
                                         <input type="hidden" name="book_id" value="<?php echo $book['id']; ?>">
                                         <button type="submit" name="borrow_book"
-                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 cursor-pointer"
                                                 <?php echo ($book['available_copies'] <= 0) ? 'disabled' : ''; ?>>
                                             <?php echo ($book['available_copies'] <= 0) ? 'Not Available' : 'Borrow Book'; ?>
                                         </button>
@@ -743,7 +756,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
 
                         <div>
                             <button type="submit" name="update_profile"
-                                    class="mt-6 px-8 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300">
+                                    class="mt-6 px-8 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 inline mr-2">
                                     <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
                             </svg>
@@ -926,7 +939,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                                                 <form method="POST" action="" class="inline-block">
                                                     <input type="hidden" name="book_id" value="<?php echo $borrowedBook['id']; ?>">
                                                     <input type="hidden" name="return_book" value="1">
-                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 shadow-md bg-green-500 text-white text-xs font-medium rounded-md hover:bg-lime-600 transition-all duration-200 hover:scale-105">
+                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 shadow-md bg-green-500 text-white text-xs font-medium rounded-md hover:bg-lime-600 transition-all duration-200 hover:scale-105 cursor-pointer">
                                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 mr-2">
                                                             <path fill-rule="evenodd" d="M12 5.25c1.213 0 2.415.046 3.605.135a3.256 3.256 0 0 1 3.01 3.01c.044.583.077 1.17.1 1.759L17.03 8.47a.75.75 0 1 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 0 0-1.06-1.06l-1.752 1.751c-.023-.65-.06-1.296-.108-1.939a4.756 4.756 0 0 0-4.392-4.392 49.422 49.422 0 0 0-7.436 0A4.756 4.756 0 0 0 3.89 8.282c-.017.224-.033.447-.046.672a.75.75 0 1 0 1.497.092c.013-.217.028-.434.044-.651a3.256 3.256 0 0 1 3.01-3.01c1.19-.09 2.392-.135 3.605-.135Zm-6.97 6.22a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.752-1.751c.023.65.06 1.296.108 1.939a4.756 4.756 0 0 0 4.392 4.392 49.413 49.413 0 0 0 7.436 0 4.756 4.756 0 0 0 4.392-4.392c.017-.223.032-.447.046-.672a.75.75 0 0 0-1.497-.092c-.013.217-.028.434-.044.651a3.256 3.256 0 0 1-3.01 3.01 47.953 47.953 0 0 1-7.21 0 3.256 3.256 0 0 1-3.01-3.01 47.759 47.759 0 0 1-.1-1.759L6.97 15.53a.75.75 0 0 0 1.06-1.06l-3-3Z" clip-rule="evenodd" />
                                                         </svg>
@@ -996,7 +1009,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                                         <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
                                 </div>
                             </div>
-                            <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors hover:scale-105 transition duration-300 ease-in-out">
+                            <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 inline-block ml-3 mr-3">
                                     <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
                                 </svg>
@@ -1046,7 +1059,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['return_book'])) {
                                     <form method="POST" action="" style="display: inline;">
                                         <input type="hidden" name="book_id" value="<?php echo $book['id']; ?>">
                                         <button type="submit" name="borrow_book"
-                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                                class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 cursor-pointer"
                                                 <?php echo ($book['available_copies'] <= 0) ? 'disabled' : ''; ?>>
                                             <?php echo ($book['available_copies'] <= 0) ? 'Not Available' : 'Borrow Book'; ?>
                                         </button>
