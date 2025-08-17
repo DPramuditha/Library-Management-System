@@ -38,19 +38,32 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_email'] = $user['email'];
-                $_SESSION['role'] = $user['role']; // FIXED: Changed from 'user_role' to 'role'
+                $_SESSION['role'] = $user['role'];
                 $_SESSION['logged_in'] = true;
 
-                if ($user['role'] === 'librarian') {
-                    header("Location: librarian_dashboard.php");
-                } else {
-                    header("Location: student_dashboard.php");
+                // Redirect based on role
+                switch($user['role']) {
+                    case 'admin':
+                        header("Location: admin_dashboard.php");
+                        break;
+                    case 'librarian':
+                        header("Location: librarian_dashboard.php");
+                        break;
+                    case 'student':
+                        header("Location: student_dashboard.php");
+                        break;
+                    default:
+                        $errors[] = "Invalid user role";
+                        break;
                 }
-                exit(); // FIXED: Added exit() after header redirect
-            }else{
+
+                if($user['role'] === 'admin' || $user['role'] === 'librarian' || $user['role'] === 'student') {
+                    exit();
+                }
+            } else {
                 $errors[] = "Invalid email or password";
             }
-        }else{
+        } else {
             $errors[] = "No user found with this email or account is inactive";
         }
         $stmt->close();
@@ -72,7 +85,7 @@ $conn->close();
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <title>Login</title>
+    <title>Login - Library Management System</title>
 </head>
 <body>
 <div class="flex min-h-screen flex-col lg:flex-row">
@@ -85,8 +98,9 @@ $conn->close();
     <div class="flex flex-col justify-center px-4 py-8 sm:px-6 lg:px-8 w-full lg:w-1/2 bg-amber-300">
         <div class="bg-white rounded-lg shadow-2xl p-4 sm:p-6 lg:p-8 hover:shadow-lg transition-shadow duration-300 max-w-md w-full mx-auto">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img src="assets/books.gif" alt="Your Company" class="mx-auto h-20 w-auto"/>
+                <img src="assets/books.gif" alt="Library Logo" class="mx-auto h-20 w-auto"/>
                 <h2 class="text-center text-xl sm:text-2xl/9 font-bold tracking-tight text-gray-900">Sign in to your account</h2>
+                <p class="text-center text-sm text-gray-600 mt-2">Admin, Librarian, or Student Access</p>
             </div>
 
             <div class="mt-6 lg:mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -138,7 +152,6 @@ $conn->close();
                         </button>
                     </div>
                 </form>
-
                 <!-- Divider -->
                 <div class="mt-6">
                     <div class="relative">

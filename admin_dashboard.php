@@ -88,40 +88,235 @@ $errors = [];
 $success = '';
 $form_data = [];
 
-// Handle Add User form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
-    // Your existing add user code here...
+// Handle Update User form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
+    $user_id = trim($_POST['user_id'] ?? '');
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $phoneNumber = trim($_POST['phoneNumber'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
     $address = trim($_POST['address'] ?? '');
-    $role = $_POST['role'] ?? '';
+    $role = trim($_POST['role'] ?? '');
 
-    // Validation and insertion code remains the same...
-    if (empty($errors)) {
-        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->bind_param("s", $email);
+    $user_errors = [];
+
+    // Validation
+    if (empty($user_id) || !is_numeric($user_id)) {
+        $user_errors[] = "Valid User ID is required";
+    }
+    if (empty($name)) {
+        $user_errors[] = "Name is required";
+    }
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $user_errors[] = "Valid email is required";
+    }
+    if (empty($phone)) {
+        $user_errors[] = "Phone number is required";
+    }
+    if (empty($address)) {
+        $user_errors[] = "Address is required";
+    }
+    if (empty($role) || !in_array($role, ['student', 'librarian'])) {
+        $user_errors[] = "Please select a valid role (student or librarian)";
+    }
+
+    if (empty($user_errors)) {
+        // Check if user exists and get their current role
+        $stmt = $conn->prepare("SELECT id, email, role FROM users WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
-            $errors[] = "Email already exists";
-        } else {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO users (name, email, password, phone, address, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-            $stmt->bind_param("ssssss", $name, $email, $hashedPassword, $phoneNumber, $address, $role);
+            $existing_user = $result->fetch_assoc();
 
-            if ($stmt->execute()) {
-                $success = "User account created successfully!";
-                $form_data = []; // Clear form data
+            // Check if trying to update an admin account
+            if ($existing_user['role'] === 'admin') {
+                $user_errors[] = "Cannot update admin account information";
             } else {
-                $errors[] = "Failed to create user account. Please try again.";
+                // Check if email is already taken by another user
+                $emailStmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+                $emailStmt->bind_param("si", $email, $user_id);
+                $emailStmt->execute();
+                $emailResult = $emailStmt->get_result();
+
+                if ($emailResult->num_rows > 0) {
+                    $user_errors[] = "Email is already in use by another user";
+                } else {
+                    // Update user information
+                    $updateStmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ?, role = ? WHERE id = ?");
+                    $updateStmt->bind_param("sssssi", $name, $email, $phone, $address, $role, $user_id);
+
+                    if ($updateStmt->execute()) {
+                        $user_success = "User information updated successfully!";
+                        // Refresh users data
+                        $users = [];
+                        $usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users ORDER BY created_at DESC";
+                        $usersResult = $conn->query($usersQuery);
+                        if ($usersResult && $usersResult->num_rows > 0) {
+                            while ($row = $usersResult->fetch_assoc()) {
+                                $users[] = $row;
+                            }
+                        }
+                    } else {
+                        $user_errors[] = "Error updating user: " . $conn->error;
+                    }
+                    $updateStmt->close();
+                }
+                $emailStmt->close();
             }
+        } else {
+            $user_errors[] = "User not found";
         }
         $stmt->close();
-    } else {
-        $form_data = $_POST;
+    }
+}
+
+// Handle Update User form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
+    $user_id = trim($_POST['user_id'] ?? '');
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $role = trim($_POST['role'] ?? '');
+
+    $user_errors = [];
+
+    // Validation
+    if (empty($user_id) || !is_numeric($user_id)) {
+        $user_errors[] = "Valid User ID is required";
+    }
+    if (empty($name)) {
+        $user_errors[] = "Name is required";
+    }
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $user_errors[] = "Valid email is required";
+    }
+    if (empty($phone)) {
+        $user_errors[] = "Phone number is required";
+    }
+    if (empty($address)) {
+        $user_errors[] = "Address is required";
+    }
+    if (empty($role) || !in_array($role, ['student', 'librarian'])) {
+        $user_errors[] = "Please select a valid role";
+    }
+
+    if (empty($user_errors)) {
+        // Check if user exists
+        $stmt = $conn->prepare("SELECT id, email FROM users WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $existing_user = $result->fetch_assoc();
+
+            // Check if email is already taken by another user
+            $emailStmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+            $emailStmt->bind_param("si", $email, $user_id);
+            $emailStmt->execute();
+            $emailResult = $emailStmt->get_result();
+
+            if ($emailResult->num_rows > 0) {
+                $user_errors[] = "Email is already in use by another user";
+            } else {
+                // Update user information
+                $updateStmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ?, role = ? WHERE id = ?");
+                $updateStmt->bind_param("sssssi", $name, $email, $phone, $address, $role, $user_id);
+
+                if ($updateStmt->execute()) {
+                    $user_success = "User information updated successfully!";
+                    // Refresh users data
+                    $users = [];
+                    $usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users ORDER BY created_at DESC";
+                    $usersResult = $conn->query($usersQuery);
+                    if ($usersResult && $usersResult->num_rows > 0) {
+                        while ($row = $usersResult->fetch_assoc()) {
+                            $users[] = $row;
+                        }
+                    }
+                } else {
+                    $user_errors[] = "Error updating user: " . $conn->error;
+                }
+                $updateStmt->close();
+            }
+            $emailStmt->close();
+        } else {
+            $user_errors[] = "User not found";
+        }
+        $stmt->close();
+    }
+}
+
+// Handle Delete User form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
+    $user_id = trim($_POST['user_id'] ?? '');
+    $delete_errors = [];
+    $delete_success = '';
+
+    // Validation
+    if (empty($user_id) || !is_numeric($user_id)) {
+        $delete_errors[] = "Valid User ID is required";
+    }
+
+    if (empty($delete_errors)) {
+        // Check if user exists and get their role
+        $stmt = $conn->prepare("SELECT id, name, role FROM users WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user_to_delete = $result->fetch_assoc();
+
+            // Check if user is admin (cannot delete admin accounts)
+            if ($user_to_delete['role'] === 'admin') {
+                $delete_errors[] = "Cannot delete admin accounts";
+            } else {
+                // Begin transaction
+                $conn->begin_transaction();
+
+                try {
+                    // Delete related borrowed books records first
+                    $deleteBorrowStmt = $conn->prepare("DELETE FROM borrowed_books WHERE user_id = ?");
+                    $deleteBorrowStmt->bind_param("i", $user_id);
+                    $deleteBorrowStmt->execute();
+                    $deleteBorrowStmt->close();
+
+                    // Delete user account
+                    $deleteUserStmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+                    $deleteUserStmt->bind_param("i", $user_id);
+                    $deleteUserStmt->execute();
+
+                    if ($deleteUserStmt->affected_rows > 0) {
+                        $conn->commit();
+                        $delete_success = "User '{$user_to_delete['name']}' has been successfully deleted!";
+
+                        // Refresh users data
+                        $users = [];
+                        $usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users ORDER BY created_at DESC";
+                        $usersResult = $conn->query($usersQuery);
+                        if ($usersResult && $usersResult->num_rows > 0) {
+                            while ($row = $usersResult->fetch_assoc()) {
+                                $users[] = $row;
+                            }
+                        }
+                    } else {
+                        $conn->rollback();
+                        $delete_errors[] = "Failed to delete user";
+                    }
+
+                    $deleteUserStmt->close();
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $delete_errors[] = "Error deleting user: " . $e->getMessage();
+                }
+            }
+        } else {
+            $delete_errors[] = "User not found";
+        }
+        $stmt->close();
     }
 }
 ?>
@@ -496,6 +691,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
             <div id="maintain-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Manage User Account</h1>
 
+                <!-- Delete Success/Error Messages -->
+                <?php if (isset($delete_success) && !empty($delete_success)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold"><?php echo htmlspecialchars($delete_success); ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($delete_errors) && !empty($delete_errors)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold">There were errors deleting the user:</p>
+                        </div>
+                        <ul class="list-disc list-inside">
+                            <?php foreach ($delete_errors as $error): ?>
+                                <li class="text-sm font-mono font-bold"><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Success Message for User Update -->
                 <?php if (isset($user_success)): ?>
                     <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
@@ -572,20 +795,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button onclick="fillUpdateForm(<?php echo $user['id']; ?>, '<?php echo addslashes($user['name']); ?>', '<?php echo addslashes($user['email']); ?>', '<?php echo addslashes($user['phone']); ?>', '<?php echo addslashes($user['address']); ?>', '<?php echo $user['role']; ?>')"
                                                 <?php echo $user['role'] === 'admin' ? 'disabled' : ''; ?>
-
-                                                class=" <?php echo $user['role'] ==='admin' ? 'inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md  cursor-not-allowed opacity-50' : 'inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 hover:scale-95'?>">
+                                                class="<?php echo $user['role'] === 'admin' ? 'inline-flex items-center px-3 py-1.5 shadow-md bg-gray-200 text-gray-500 text-xs font-medium rounded-md cursor-not-allowed opacity-50' : 'relative inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-black bg-indigo-100 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 hover:scale-95 hover:text-white'; ?>">
+                                            <?php if ($user['role'] !== 'admin'): ?>
+                                                <span class="absolute -top-1 -right-1 flex size-3">
+                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
+                                                    <span class="relative inline-flex size-3 rounded-full bg-indigo-500"></span>
+                                                </span>
+                                            <?php endif; ?>
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-1">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
-                                            Update
+                                            <?php echo $user['role'] === 'admin' ? 'Protected' : 'Update'; ?>
                                         </button>
-                                        <button
-                                                class="<?php echo $user['role'] ==='admin'? 'inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md  cursor-not-allowed opacity-50' : 'inline-flex items-center px-3 py-1.5 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 hover:text-white cursor-pointer'?>">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-1">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                            </svg>
-                                            Delete
-                                        </button>
+                                        <form method="POST" action="" style="display: inline;"
+                                              onsubmit="return <?php echo $user['role'] === 'admin' ? 'false' : 'confirm(\'Are you sure you want to delete user: ' . addslashes($user['name']) . '?\')'; ?>">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <button type="submit" name="delete_user"
+                                                    <?php echo $user['role'] === 'admin' ? 'disabled' : ''; ?>
+                                                    class="<?php echo $user['role'] === 'admin' ? 'inline-flex items-center px-3 py-1.5 shadow-md bg-gray-200 text-gray-500 text-xs font-medium rounded-md cursor-not-allowed opacity-50' : 'relative inline-flex items-center px-3 py-1.5 pl-3 shadow-md bg-red-50 text-black text-xs font-medium rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-95 hover:text-white cursor-pointer'; ?>">
+                                                <?php if ($user['role'] !== 'admin'): ?>
+                                                    <span class="absolute -top-1 -right-1 flex size-3">
+                                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                                         <span class="relative inline-flex size-3 rounded-full bg-red-500"></span>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-1">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                                <?php echo $user['role'] === 'admin' ? 'Protected' : 'Delete'; ?>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -650,114 +889,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                 </svg>
                                 Clear Form
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-
-            <!-- Profile Section - Updated -->
-            <div id="profile-section" class="content-section hidden">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
-
-                <!-- Success/Error Message -->
-                <?php if (!empty($updateMessage)): ?>
-                    <div class="mb-6 p-4 rounded-lg <?php echo $updateSuccess ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'; ?>">
-                        <div class="flex items-center">
-                            <?php if ($updateSuccess): ?>
-                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                                <p class="font-medium">Success!</p>
-                            <?php else: ?>
-                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                </svg>
-                            <?php endif; ?>
-                            <?php echo htmlspecialchars($updateMessage); ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="relative overflow-hidden rounded-lg shadow-md">
-                        <img src="pages/assets/profile02.jpg" alt="Library Reading"
-                             class="w-full h-80 object-cover transition-transform duration-700 hover:scale-110">
-                    </div>
-                    <div class="relative overflow-hidden rounded-lg shadow-md">
-                        <img src="pages/assets/profile01.jpg" alt="Digital Library"
-                             class="w-full h-80 object-cover transition-transform duration-700 hover:scale-110">
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex items-center space-x-4 mb-6">
-                        <img src="assets/profile-placeholder.png" alt="Profile"
-                             class="h-20 w-20 rounded-full object-cover border-2 border-gray-300">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900"><?php echo htmlspecialchars($userData['name']); ?></h2>
-                            <p class="text-gray-600">Email: <?php echo htmlspecialchars($userData['email']); ?></p>
-                        </div>
-                    </div>
-
-                    <form method="POST" action="">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div>
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                        <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
-                                    </svg>
-                                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                                </div>
-                                <input type="text" name="full_name" value="<?php echo htmlspecialchars($userData['name']); ?>" required
-                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
-                            </div>
-
-                            <div>
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                        <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-                                        <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-                                    </svg>
-                                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                                </div>
-                                <input type="email" name="email" value="<?php echo htmlspecialchars($userData['email']); ?>" required
-                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div>
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                        <path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" />
-                                    </svg>
-                                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                                </div>
-                                <input type="tel" name="phone" value="<?php echo htmlspecialchars($userData['phone'] ?? ''); ?>" required
-                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
-                            </div>
-
-                            <div>
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                        <path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
-                                    </svg>
-                                    <label class="block text-sm font-medium text-gray-700">Address</label>
-                                </div>
-                                <input type="text" name="address" value="<?php echo htmlspecialchars($userData['address'] ?? ''); ?>"
-                                       class="p-4 block w-full rounded-md border-2 border-gray-300 focus:border-blue-600 shadow-sm hover:bg-indigo-50 transition-colors duration-400">
-                            </div>
-                        </div>
-
-                        <div>
-                            <button type="submit" name="update_profile"
-                                    class="mt-6 px-8 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 inline mr-2">
-                                    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
-                                </svg>
-                                Update Profile
                             </button>
                         </div>
                     </form>

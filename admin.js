@@ -1,4 +1,12 @@
+
+
 function fillUpdateForm(id, name, email, phone, address, role) {
+    // Check if it's an admin account
+    if (role === 'admin') {
+        alert('Admin accounts cannot be updated through this form.');
+        return;
+    }
+
     document.getElementById('update_user_id').value = id;
     document.getElementById('update_name').value = name;
     document.getElementById('update_email').value = email;
