@@ -26,3 +26,4 @@ function clearUpdateForm() {
     document.getElementById('update_address').value = '';
     document.getElementById('update_role').value = '';
 }
+

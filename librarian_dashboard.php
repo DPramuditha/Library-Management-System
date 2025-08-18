@@ -699,7 +699,7 @@ $conn->close();
             </div>
 
 
-            <!-- Manage User Section -->
+
             <!-- Manage User Section -->
             <div id="manageuser-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Manage User</h1>

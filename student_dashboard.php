@@ -338,7 +338,7 @@ if ($booksResult && $booksResult->num_rows > 0) {
             </div>
             <div>
                 <nav class="flex-1 px-4 py-6 space-y-2">
-                    <a href="#" onclick="showSection('home')"
+                    <a href="?section=home" onclick="showSection('home')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
@@ -348,7 +348,7 @@ if ($booksResult && $booksResult->num_rows > 0) {
 
                         <span class="text-base font-medium">Home</span>
                     </a>
-                    <a href="#" onclick="showSection('profile')"
+                    <a href="?section=profile" onclick="showSection('profile')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
@@ -358,7 +358,7 @@ if ($booksResult && $booksResult->num_rows > 0) {
 
                         <span class="text-md font-medium">Profile</span>
                     </a>
-                    <a href="#" onclick="showSection('borrowed')"
+                    <a href="?section=borrowed" onclick="showSection('borrowed')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
@@ -368,7 +368,7 @@ if ($booksResult && $booksResult->num_rows > 0) {
 
                         <span class="text-md font-medium">Borrowed Books</span>
                     </a>
-                    <a href="#" onclick="showSection('search')"
+                    <a href="?section=search" onclick="showSection('search')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                              class="size-6 mr-2">
@@ -531,7 +531,12 @@ if ($booksResult && $booksResult->num_rows > 0) {
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-700 transition-colors duration-300">
                                     Due Soon</h3>
                                 <p class="text-3xl font-bold text-orange-600 group-hover:text-orange-700 transition-colors duration-300">
-                                    3</p>
+                                    <?php
+                                    $dueSoon = array_filter($borrowedBooks, function($book) {
+                                        return $book['status'] === 'borrowed' && strtotime($book['due_date']) <= strtotime('+3 days');
+                                    });
+                                    echo count($dueSoon);
+                                    ?></p>
                             </div>
                             <div class="bg-orange-100 p-3 rounded-full group-hover:bg-orange-200 transition-colors duration-300">
                                 <img src="assets/icons8-future-100.png" alt="Due Soon Icon"
@@ -696,8 +701,12 @@ if ($booksResult && $booksResult->num_rows > 0) {
 
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex items-center space-x-4 mb-6">
-                        <img src="assets/profile-placeholder.png" alt="Profile"
-                             class="h-20 w-20 rounded-full object-cover border-2 border-gray-300">
+<!--                        <img src="assets/profile-placeholder.png" alt="Profile"-->
+<!--                             class="h-20 w-20 rounded-full object-cover border-2 border-gray-300">-->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-15 w-15 p-3 rounded-full object-cover border-2 border-gray-300 bg-sky-500 text-white">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                        </svg>
+
                         <div>
                             <h2 class="text-2xl font-bold text-gray-900"><?php echo htmlspecialchars($userData['name']); ?></h2>
                             <p class="text-gray-600">Email: <?php echo htmlspecialchars($userData['email']); ?></p>
@@ -967,7 +976,7 @@ if ($booksResult && $booksResult->num_rows > 0) {
             <div id="search-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Search Books</h1>
 
-                <!-- Add this right after <main class="flex-1 overflow-auto p-6"> -->
+                <!-- Success/Error Messages -->
                 <?php if (isset($borrow_success)): ?>
                     <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
                         <div class="flex items-center">
@@ -984,7 +993,7 @@ if ($booksResult && $booksResult->num_rows > 0) {
                         <div class="flex items-center mb-2">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
+                            </svg>
                             Please fix the following errors:
                         </div>
                         <ul class="list-disc list-inside">
@@ -995,36 +1004,136 @@ if ($booksResult && $booksResult->num_rows > 0) {
                     </div>
                 <?php endif; ?>
 
+                <!-- Search Form -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <form method="GET" action="">
                         <input type="hidden" name="section" value="search">
                         <div class="flex space-x-4">
                             <div class="relative flex-1">
-                                <input type="text" name="search"
+                                <input type="text" name="search" placeholder="Search by title, author, or ISBN..."
                                        value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>"
-                                       placeholder="Search by title, author, or ISBN..."
-                                       class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-700">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-gray-400">
-                                        <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
-                                </div>
+                                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
                             </div>
                             <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 inline-block ml-3 mr-3">
-                                    <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
+                                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
                                 Search
                             </button>
+                            <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+                                <a href="?section=search" class="px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors">
+                                    Clear
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </form>
                 </div>
-                <div class="mt-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <?php
-                        $booksToShow = !empty($searchResults) ? $searchResults : $availableBooks;
-                        foreach ($booksToShow as $book):
-                            ?>
-                            <div class="bg-white rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out overflow-hidden">
+
+                <?php
+                // Get unique categories for filtering
+                $categories = [];
+                foreach ($availableBooks as $book) {
+                    if (!empty($book['category']) && !in_array($book['category'], $categories)) {
+                        $categories[] = $book['category'];
+                    }
+                }
+                sort($categories);
+
+                // Determine what to display
+                $booksToShow = [];
+                $searchPerformed = isset($_GET['search']) && !empty($_GET['search']);
+
+                if ($searchPerformed) {
+                    $booksToShow = $searchResults;
+                    $sectionTitle = "Search Results for: \"" . htmlspecialchars($_GET['search']) . "\"";
+                } else {
+                    $booksToShow = $availableBooks;
+                    $sectionTitle = "All Available Books";
+                }
+                ?>
+
+                <!-- Results Section -->
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4"><?php echo $sectionTitle; ?></h2>
+
+                    <?php if ($searchPerformed): ?>
+                        <p class="text-gray-600 mb-4">
+                            Found <?php echo count($booksToShow); ?> book(s) matching your search criteria.
+                        </p>
+                    <?php else: ?>
+                        <!-- Category Filter Buttons -->
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <button onclick="filterByCategory('all')" class="category-filter px-4 py-2 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition-colors active" data-category="all">
+                                All Categories (<?php echo count($availableBooks); ?>)
+                            </button>
+                            <?php foreach ($categories as $category): ?>
+                                <?php
+                                $categoryCount = count(array_filter($availableBooks, function($book) use ($category) {
+                                    return $book['category'] === $category;
+                                }));
+                                ?>
+                                <button onclick="filterByCategory('<?php echo htmlspecialchars($category); ?>')"
+                                        class="category-filter px-4 py-2 bg-gray-100 text-gray-800 rounded-full hover:bg-gray-200 transition-colors"
+                                        data-category="<?php echo htmlspecialchars($category); ?>">
+                                    <?php echo htmlspecialchars($category); ?> (<?php echo $categoryCount; ?>)
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Books Display -->
+                <?php if (empty($booksToShow)): ?>
+                    <!-- No Books Found Message -->
+                    <div class="bg-white rounded-lg shadow-md p-12 text-center">
+                        <div class="max-w-md mx-auto">
+                            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.034 0-3.92.785-5.165 2.083m13.83-8.646l1.414-1.414a2 2 0 000-2.828L19.414 2.83a2 2 0 00-2.828 0L15.172 4.244M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Books Found</h3>
+                            <?php if ($searchPerformed): ?>
+                                <p class="text-gray-600 mb-4">
+                                    We couldn't find any books matching "<strong><?php echo htmlspecialchars($_GET['search']); ?></strong>".
+                                </p>
+                                <div class="space-y-2 text-sm text-gray-500 mb-6">
+                                    <p>Try searching with different keywords such as:</p>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Book title or partial title</li>
+                                        <li>Author's name</li>
+                                        <li>ISBN number</li>
+                                        <li>Different spelling variations</li>
+                                    </ul>
+                                </div>
+                                <div class="space-x-3">
+                                    <a href="?section=search" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                        </svg>
+                                        Browse All Books
+                                    </a>
+                                    <button onclick="document.querySelector('input[name=search]').focus()" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                        Try Another Search
+                                    </button>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-gray-600 mb-4">
+                                    It looks like there are no books available in the library at the moment.
+                                </p>
+                                <p class="text-sm text-gray-500">Please check back later or contact the librarian for assistance.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <!-- Books Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="books-container">
+                        <?php foreach ($booksToShow as $book): ?>
+                            <div class="book-card bg-white rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out overflow-hidden" data-category="<?php echo htmlspecialchars($book['category']); ?>">
                                 <div class="h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
                                     <?php if (!empty($book['cover_image_url'])): ?>
                                         <img src="<?php echo htmlspecialchars($book['cover_image_url']); ?>"
@@ -1041,13 +1150,13 @@ if ($booksResult && $booksResult->num_rows > 0) {
                                     <div class="flex items-center justify-between mb-1">
                                         <h3 class="text-lg font-semibold text-gray-900 truncate"><?php echo htmlspecialchars($book['title']); ?></h3>
                                         <span class="relative flex size-3">
-                                    <?php if ($book['available_copies'] > 0): ?>
-                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                                        <span class="relative inline-flex size-3 rounded-full bg-green-500"></span>
-                                    <?php else: ?>
-                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                        <span class="relative inline-flex size-3 rounded-full bg-red-500"></span>
-                                    <?php endif; ?>
+                                <?php if ($book['available_copies'] > 0): ?>
+                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex size-3 rounded-full bg-green-500"></span>
+                                <?php else: ?>
+                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex size-3 rounded-full bg-red-500"></span>
+                                <?php endif; ?>
                             </span>
                                     </div>
                                     <p class="text-sm text-gray-600 mb-2"><?php echo htmlspecialchars($book['author']); ?></p>
@@ -1055,7 +1164,6 @@ if ($booksResult && $booksResult->num_rows > 0) {
                                         <?php echo htmlspecialchars($book['category']); ?> •
                                         <?php echo $book['available_copies'] > 0 ? 'Available (' . $book['available_copies'] . ')' : 'Borrowed'; ?>
                                     </p>
-                                    <!-- In your book display sections, replace the borrow button with: -->
                                     <form method="POST" action="" style="display: inline;">
                                         <input type="hidden" name="book_id" value="<?php echo $book['id']; ?>">
                                         <button type="submit" name="borrow_book"
@@ -1068,12 +1176,13 @@ if ($booksResult && $booksResult->num_rows > 0) {
                             </div>
                         <?php endforeach; ?>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>
 </div>
 <script>
+    // This function now handles showing sections and updating nav links without relying on a click event
     function showSection(sectionName) {
         // Hide all content sections
         const sections = document.querySelectorAll('.content-section');
@@ -1081,22 +1190,69 @@ if ($booksResult && $booksResult->num_rows > 0) {
             section.classList.add('hidden');
         });
 
-        // Show selected section
-        document.getElementById(sectionName + '-section').classList.remove('hidden');
+        // Show the selected section
+        const sectionToShow = document.getElementById(sectionName + '-section');
+        if (sectionToShow) {
+            sectionToShow.classList.remove('hidden');
+        }
 
-        // Update active navigation item
+        // Update active state in navigation
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.classList.remove('bg-blue-500', 'text-white');
         });
 
-        // Add active class to clicked nav item
-        event.target.closest('.nav-link').classList.add('bg-blue-500', 'text-white');
+        // Find the corresponding nav link and make it active
+        // Note: This selector finds the link whose onclick attribute calls showSection with the correct name.
+        const activeNavLink = document.querySelector(`.nav-link[onclick*="showSection('${sectionName}')"]`);
+        if (activeNavLink) {
+            activeNavLink.classList.add('bg-blue-500', 'text-white');
+        }
+    }
+
+    // This code runs when the page loads to show the correct section
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section');
+
+        if (section) {
+            // If a section is specified in the URL (e.g., after a search), show it
+            showSection(section);
+        } else {
+            // Otherwise, default to the home section
+            showSection('home');
+        }
+    });
+
+    // Your existing filterByCategory and logout functions remain the same
+    function filterByCategory(category) {
+        const bookCards = document.querySelectorAll('.book-card');
+        const filterButtons = document.querySelectorAll('.category-filter');
+
+        // Update button states
+        filterButtons.forEach(button => {
+            button.classList.remove('active', 'bg-blue-100', 'text-blue-800');
+            button.classList.add('bg-gray-100', 'text-gray-800');
+        });
+
+        const activeButton = document.querySelector(`[data-category="${category}"]`);
+        activeButton.classList.add('active', 'bg-blue-100', 'text-blue-800');
+        activeButton.classList.remove('bg-gray-100', 'text-gray-800');
+
+        // Filter books
+        bookCards.forEach(card => {
+            if (category === 'all' || card.getAttribute('data-category') === category) {
+                card.style.display = 'block';
+                card.classList.remove('hidden');
+            } else {
+                card.style.display = 'none';
+                card.classList.add('hidden');
+            }
+        });
     }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            // Create a form to handle logout properly
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '';
@@ -1115,6 +1271,34 @@ if ($booksResult && $booksResult->num_rows > 0) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    function filterByCategory(category) {
+        const bookCards = document.querySelectorAll('.book-card');
+        const filterButtons = document.querySelectorAll('.category-filter');
+
+        // Update button states
+        filterButtons.forEach(button => {
+            button.classList.remove('active', 'bg-blue-100', 'text-blue-800');
+            button.classList.add('bg-gray-100', 'text-gray-800');
+        });
+
+        const activeButton = document.querySelector(`[data-category="${category}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active', 'bg-blue-100', 'text-blue-800');
+            activeButton.classList.remove('bg-gray-100', 'text-gray-800');
+        }
+
+        // Filter books
+        bookCards.forEach(card => {
+            if (category === 'all' || card.getAttribute('data-category') === category) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
 
 <script src="main.js"></script>
 </body>
