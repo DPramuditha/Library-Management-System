@@ -141,3 +141,20 @@ function initializeCharts() {
         }
     });
 }
+
+function fillBookUpdateForm(book) {
+    // Fill the book update form with book data
+    document.querySelector('input[name="book_id"]').value = book.id;
+    document.querySelector('input[name="title"]').value = book.title;
+    document.querySelector('input[name="author"]').value = book.author;
+    document.querySelector('input[name="category"]').value = book.category;
+    document.querySelector('input[name="description"]').value = book.description || '';
+    document.querySelector('input[name="publication_year"]').value = book.publication_year;
+    document.querySelector('input[name="publisher"]').value = book.publisher || '';
+    document.querySelector('input[name="total_copies"]').value = book.total_copies;
+    document.querySelector('input[name="available_copies"]').value = book.available_copies;
+    document.querySelector('select[name="status"]').value = book.status;
+
+    // Scroll to the form
+    document.querySelector('input[name="book_id"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}

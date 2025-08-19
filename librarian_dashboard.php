@@ -79,9 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     }
 }
 
-// Fetch all users for display
+// Fetch all users for display (excluding admin users)
 $users = [];
-$usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users ORDER BY created_at DESC";
+$usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users WHERE role != 'admin' ORDER BY created_at DESC";
 $usersResult = $conn->query($usersQuery);
 
 if ($usersResult && $usersResult->num_rows > 0) {
@@ -328,8 +328,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
     }
 
     if (empty($user_errors)) {
-        // Check if user exists
-        $stmt = $conn->prepare("SELECT id, email FROM users WHERE id = ?");
+        // Check if user exists and is not an admin
+        $stmt = $conn->prepare("SELECT id, email, role FROM users WHERE id = ? AND role != 'admin'");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -347,33 +347,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
                 $user_errors[] = "Email is already in use by another user";
             } else {
                 // Update user information
-                $updateStmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ?, role = ? WHERE id = ?");
+                $updateStmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ?, role = ? WHERE id = ? AND role != 'admin'");
                 $updateStmt->bind_param("sssssi", $name, $email, $phone, $address, $role, $user_id);
 
-                if ($updateStmt->execute()) {
-                    $user_success = "User information updated successfully!";
+                if ($updateStmt->execute() && $updateStmt->affected_rows > 0) {
+                    $user_success = "User updated successfully!";
                     // Refresh users data
-                    $users = [];
-                    $usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users ORDER BY created_at DESC";
+                    $usersQuery = "SELECT id, name, email, phone, address, role, created_at FROM users WHERE role != 'admin' ORDER BY created_at DESC";
                     $usersResult = $conn->query($usersQuery);
+                    $users = [];
                     if ($usersResult && $usersResult->num_rows > 0) {
                         while ($row = $usersResult->fetch_assoc()) {
                             $users[] = $row;
                         }
                     }
                 } else {
-                    $user_errors[] = "Error updating user: " . $conn->error;
+                    $user_errors[] = "Error updating user or user not found";
                 }
                 $updateStmt->close();
             }
             $emailStmt->close();
         } else {
-            $user_errors[] = "User not found";
+            $user_errors[] = "User not found or cannot update admin users";
         }
         $stmt->close();
     }
 }
 
+// Handle Add Book form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
+    $title = trim($_POST['title1'] ?? '');
+    $isbn = trim($_POST['isbn1'] ?? '');
+    $author = trim($_POST['author1'] ?? '');
+    $category = trim($_POST['category1'] ?? '');
+    $description = trim($_POST['description1'] ?? '');
+    $publication_year = trim($_POST['publication_year1'] ?? '');
+    $publisher = trim($_POST['publisher1'] ?? '');
+    $cover_image_url = trim($_POST['cover_image_url1'] ?? '');
+    $total_copies = trim($_POST['total_copies1'] ?? '');
+    $available_copies = trim($_POST['available_copies1'] ?? '');
+    $status = trim($_POST['status1'] ?? '');
+
+    $book_add_errors = [];
+
+    // Convert empty ISBN to NULL for database insertion
+    $isbn_value = empty($isbn) ? null : $isbn;
+
+    // Validation (ISBN is now optional)
+    if (empty($title)) {
+        $book_add_errors[] = "Title is required";
+    }
+    if (empty($author)) {
+        $book_add_errors[] = "Author is required";
+    }
+    if (empty($category)) {
+        $book_add_errors[] = "Category is required";
+    }
+    if (empty($publication_year) || !is_numeric($publication_year) || $publication_year < 1000 || $publication_year > date('Y')) {
+        $book_add_errors[] = "Valid publication year is required";
+    }
+    if (empty($publisher)) {
+        $book_add_errors[] = "Publisher is required";
+    }
+    if (empty($total_copies) || !is_numeric($total_copies) || $total_copies < 1) {
+        $book_add_errors[] = "Valid total copies number is required (minimum 1)";
+    }
+    if (empty($available_copies) || !is_numeric($available_copies) || $available_copies < 0) {
+        $book_add_errors[] = "Valid available copies number is required";
+    }
+    if ($available_copies > $total_copies) {
+        $book_add_errors[] = "Available copies cannot exceed total copies";
+    }
+    if (empty($status) || !in_array($status, ['available', 'unavailable'])) {
+        $book_add_errors[] = "Please select a valid status";
+    }
+
+    if (empty($book_add_errors)) {
+        // Check if ISBN already exists (only if ISBN is provided)
+        $isbn_exists = false;
+        if ($isbn_value !== null) {
+            $stmt = $conn->prepare("SELECT id FROM books WHERE isbn = ?");
+            $stmt->bind_param("s", $isbn_value);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                $book_add_errors[] = "A book with this ISBN already exists";
+                $isbn_exists = true;
+            }
+            $stmt->close();
+        }
+
+        if (!$isbn_exists) {
+            // Insert new book with NULL for empty ISBN
+            $insertStmt = $conn->prepare("INSERT INTO books (title, isbn, author, category, description, publication_year, publisher, cover_image_url, total_copies, available_copies, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $insertStmt->bind_param("sssssissiis", $title, $isbn_value, $author, $category, $description, $publication_year, $publisher, $cover_image_url, $total_copies, $available_copies, $status);
+
+            if ($insertStmt->execute()) {
+                $book_add_success = "Book added successfully!";
+                // Refresh books data
+                $booksQuery = "SELECT id, title, author, category, description, publication_year, publisher, total_copies, available_copies, status FROM books ORDER BY id DESC";
+                $booksResult = $conn->query($booksQuery);
+                $books = [];
+                if ($booksResult && $booksResult->num_rows > 0) {
+                    while ($row = $booksResult->fetch_assoc()) {
+                        $books[] = $row;
+                    }
+                }
+            } else {
+                $book_add_errors[] = "Error adding book: " . $conn->error;
+            }
+            $insertStmt->close();
+        }
+    }
+}
 $conn->close();
 ?>
 
@@ -859,6 +946,35 @@ $conn->close();
             <div id="addbooks-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Add New Books</h1>
 
+                <!-- Success Message for Book Addition -->
+                <?php if (isset($book_add_success)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold"><?php echo htmlspecialchars($book_add_success); ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Error Messages for Book Addition -->
+                <?php if (isset($book_add_errors) && !empty($book_add_errors)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-mono font-bold">Please fix the following errors:</p>
+                        </div>
+                        <ul class="list-disc list-inside">
+                            <?php foreach ($book_add_errors as $error): ?>
+                                <li class="text-sm font-mono font-bold"><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
                 <div class="flex flex-col lg:flex-row items-center justify-center gap-8 p-8">
                     <!-- Left side - Form -->
                     <div class="bg-white rounded-lg shadow-2xl p-6 sm:p-8 w-full max-w-md">
@@ -866,49 +982,57 @@ $conn->close();
                             <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Add New Books</h2>
                             <p class="text-gray-600 text-sm">Fill in the details below to add a new book to the library.</p>
                         </div>
-                        <form action="#" method="POST" class="space-y-6">
+                        <form method="POST" action="" class="space-y-6">
                             <div>
                                 <label for="title" class="block text-sm font-medium text-gray-900">Book Title</label>
-                                <input id="title" type="text"  required autocomplete="title" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="title" name="title1" type="text" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                            </div>
+                            <div>
+                                <label for="isbn" class="block text-sm font-medium text-gray-900">Book ISBN</label>
+                                <input id="isbn" name="isbn1" type="text" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="author" class="block text-sm font-medium text-gray-900">Book Author</label>
-                                <input id="author" type="text"  required autocomplete="author" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="author" name="author1" type="text" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="category" class="block text-sm font-medium text-gray-900">Book Category</label>
-                                <input id="category" type="text"  required autocomplete="category" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <input id="category" name="category1" type="text" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
                                 <label for="description" class="block text-sm font-medium text-gray-900">Book Description</label>
-                                <input id="description" type="text" name="descripton" required autocomplete="description" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <textarea id="description" name="description1" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm"></textarea>
                             </div>
                             <div>
-                                <label for="publicationyear" class="block text-sm font-medium text-gray-900">Book Publication Year</label>
-                                <input id="publicationyear" type="number" name="pulicationyear" required autocomplete="pulicationyear" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <label for="publication_year" class="block text-sm font-medium text-gray-900">Publication Year</label>
+                                <input id="publication_year" name="publication_year1" type="number" min="1000" max="<?php echo date('Y'); ?>" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
-                                <label for="publisher" class="block text-sm font-medium text-gray-900">Book Publisher</label>
-                                <input id="publisher" type="text"  required autocomplete="publisher" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <label for="publisher" class="block text-sm font-medium text-gray-900">Publisher</label>
+                                <input id="publisher" name="publisher1" type="text" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
-                                <label for="total_copies" class="block text-sm font-medium text-gray-900">Book Total Copies</label>
-                                <input id="total_copies" type="number"  required autocomplete="total_copies" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <label for="cover_image_url" class="block text-sm font-medium text-gray-900">Cover Image URL</label>
+                                <input id="cover_image_url" name="cover_image_url1" type="url" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
-                                <label for="available_copies" class="block text-sm font-medium text-gray-900">Book Available Copies</label>
-                                <input id="available_copies" type="number"  required autocomplete="available_copies" class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                                <label for="total_copies" class="block text-sm font-medium text-gray-900">Total Copies</label>
+                                <input id="total_copies" name="total_copies1" type="number" min="1" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
                             </div>
                             <div>
-                                <label for="status" class="block text-sm font-medium text-gray-900">Books Status</label>
-                                <select id="status" name="status" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm">
-                                    <option value="" disabled selected>Select your Status</option>
+                                <label for="available_copies" class="block text-sm font-medium text-gray-900">Available Copies</label>
+                                <input id="available_copies" name="available_copies1" type="number" min="0" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
+                            </div>
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-gray-900">Status</label>
+                                <select id="status" name="status1" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-600 sm:text-sm">
+                                    <option value="" disabled selected>Select Status</option>
                                     <option value="available">Available</option>
                                     <option value="unavailable">Unavailable</option>
                                 </select>
                             </div>
                             <div>
-                                <button type="submit" class="w-full flex justify-center rounded-md bg-indigo-600 p-3 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transition-all duration-300 cursor-pointer">
+                                <button type="submit" name="add_book" class="w-full flex justify-center items-center rounded-md bg-indigo-600 p-3 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 focus-visible:outline focus-visible:outline-indigo-600 hover:scale-95 transition-all duration-300 cursor-pointer">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
                                         <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                                     </svg>
@@ -917,10 +1041,11 @@ $conn->close();
                             </div>
                         </form>
                     </div>
+                    <!-- Right side image remains the same -->
                     <div class="hidden lg:block w-full max-w-md">
                         <div class="relative">
-                            <img src="pages/assets/add_new_book.jpg" alt="Team Collaboration" class="w-full h-auto rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-                            <div class="absolute inset-0 bg-gradient-to-tr from-blue-600/10 to-purple-600/10 rounded-2xl object-cover transition-transform duration-700 hover:scale-110"></div>
+                            <img src="pages/assets/add_new_book.jpg" alt="Add New Book" class="w-full h-auto rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-gradient-to-tr from-blue-600/10 to-purple-600/10 rounded-2xl"></div>
                         </div>
                     </div>
                 </div>
@@ -1151,7 +1276,7 @@ $conn->close();
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                            <button onclick="fillUpdateForm(<?php echo htmlspecialchars(json_encode($book)); ?>)" class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105 cursor-pointer">
+                                            <button onclick="fillBookUpdateForm(<?php echo htmlspecialchars(json_encode($book)); ?>)" class="inline-flex items-center px-3 py-1.5 shadow-md bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105 cursor-pointer">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                 </svg>
@@ -1233,7 +1358,7 @@ $conn->close();
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Details</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>
+<!--                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>-->
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Date</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -1254,9 +1379,9 @@ $conn->close();
                                             <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($borrowing['book_title']); ?></div>
                                             <div class="text-sm text-gray-500">by <?php echo htmlspecialchars($borrowing['book_author']); ?></div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <?php echo date('M d, Y', strtotime($borrowing['borrow_date'])); ?>
-                                        </td>
+<!--                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-->
+<!--                                            --><?php //echo date('M d, Y', strtotime($borrowing['borrow_date'])); ?>
+<!--                                        </td>-->
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <?php
                                             $due_date = date('M d, Y', strtotime($borrowing['due_date']));
@@ -1383,6 +1508,25 @@ $conn->close();
             form.submit();
         }
     }
+</script>
+<script>
+    function fillBookUpdateForm(book) {
+        // Fill the book update form with book data
+        document.querySelector('input[name="book_id"]').value = book.id;
+        document.querySelector('input[name="title"]').value = book.title;
+        document.querySelector('input[name="author"]').value = book.author;
+        document.querySelector('input[name="category"]').value = book.category;
+        document.querySelector('input[name="description"]').value = book.description || '';
+        document.querySelector('input[name="publication_year"]').value = book.publication_year;
+        document.querySelector('input[name="publisher"]').value = book.publisher || '';
+        document.querySelector('input[name="total_copies"]').value = book.total_copies;
+        document.querySelector('input[name="available_copies"]').value = book.available_copies;
+        document.querySelector('select[name="status"]').value = book.status;
+
+        // Scroll to the form
+        document.querySelector('input[name="book_id"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="librarian.js"></script>
