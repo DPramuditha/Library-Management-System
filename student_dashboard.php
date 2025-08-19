@@ -379,12 +379,13 @@ if ($booksResult && $booksResult->num_rows > 0) {
 
                         <span class="text-md font-medium">Search Books</span>
                     </a>
-                    <a href="#"
+                    <a href="#" onclick="showSection('change-password')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077 1.41-.513m14.095-5.13 1.41-.513M5.106 17.785l1.15-.964m11.49-9.642 1.149-.964M7.501 19.795l.75-1.3m7.5-12.99.75-1.3m-6.063 16.658.26-1.477m2.605-14.772.26-1.477m0 17.726-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205 12 12m6.894 5.785-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495" />
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
+                            <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
                         </svg>
-                        <span class="text-md font-medium">Settings</span>
+
+                        <span class="text-md font-medium">Change Password</span>
                     </a>
                 </nav>
             </div>
@@ -1177,6 +1178,93 @@ if ($booksResult && $booksResult->num_rows > 0) {
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+            </div>
+            <!-- Password Change Section -->
+            <div id="change-password-section" class="content-section hidden ">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Change Password</h1>
+
+                <!-- Success Message -->
+                <?php if (isset($password_success)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-medium"><?php echo htmlspecialchars($password_success); ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Error Messages -->
+                <?php if (isset($password_errors) && !empty($password_errors)): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <div class="flex items-center mb-2">
+                            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm font-medium">Please fix the following errors:</p>
+                        </div>
+                        <ul class="list-disc list-inside">
+                            <?php foreach ($password_errors as $error): ?>
+                                <li class="text-sm"><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <div class="max-w-md mx-auto bg-white rounded-xl shadow-xl p-6">
+                    <div class="text-center mb-6">
+                        <img src="pages/assets/password.gif" alt="Change Password"
+                             class="mx-auto size-20 mb-2">
+                        <h2 class="text-xl font-bold text-gray-900">Change Password</h2>
+                        <p class="text-gray-600 text-sm mt-2">Enter your current password and choose a new one</p>
+                    </div>
+
+                    <form method="POST" action="" class="space-y-4">
+                        <div>
+                            <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                            <input type="password"
+                                   id="current_password"
+                                   name="current_password"
+                                   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="Enter your current password">
+                        </div>
+
+                        <div>
+                            <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                            <input type="password"
+                                   id="new_password"
+                                   name="new_password"
+                                   required
+                                   minlength="6"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="Enter new password (min 6 characters)">
+                        </div>
+
+                        <div>
+                            <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                            <input type="password"
+                                   id="confirm_password"
+                                   name="confirm_password"
+                                   required
+                                   minlength="6"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="Confirm your new password">
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit"
+                                    name="change_password"
+                                    class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition-all duration-300 hover:scale-95 cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 inline mr-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+                                </svg>
+                                Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </main>
     </div>
