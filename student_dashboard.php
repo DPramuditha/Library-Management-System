@@ -310,6 +310,65 @@ if ($booksResult && $booksResult->num_rows > 0) {
         $books[] = $row;
     }
 }
+
+// Handle Password Change form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
+    $current_password = $_POST['current_password'] ?? '';
+    $new_password = $_POST['new_password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+
+    $password_errors = [];
+
+    // Validation
+    if (empty($current_password)) {
+        $password_errors[] = "Current password is required";
+    }
+
+    if (empty($new_password)) {
+        $password_errors[] = "New password is required";
+    } elseif (strlen($new_password) < 6) {
+        $password_errors[] = "New password must be at least 6 characters long";
+    }
+
+    if (empty($confirm_password)) {
+        $password_errors[] = "Please confirm your new password";
+    } elseif ($new_password !== $confirm_password) {
+        $password_errors[] = "New passwords do not match";
+    }
+
+    if (empty($password_errors)) {
+        // Get current user's password from database
+        $userId = $_SESSION['user_id'];
+        $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+
+            // Verify current password
+            if (password_verify($current_password, $user['password'])) {
+                // Update password
+                $hashed_new_password = password_hash($new_password, PASSWORD_DEFAULT);
+                $updateStmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $updateStmt->bind_param("si", $hashed_new_password, $userId);
+
+                if ($updateStmt->execute()) {
+                    $password_success = "Password changed successfully!";
+                } else {
+                    $password_errors[] = "Failed to update password. Please try again.";
+                }
+                $updateStmt->close();
+            } else {
+                $password_errors[] = "Current password is incorrect";
+            }
+        } else {
+            $password_errors[] = "User not found";
+        }
+        $stmt->close();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -379,7 +438,7 @@ if ($booksResult && $booksResult->num_rows > 0) {
 
                         <span class="text-md font-medium">Search Books</span>
                     </a>
-                    <a href="#" onclick="showSection('change-password')"
+                    <a href="?section=change-password" onclick="showSection('change-password')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
                             <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
@@ -912,10 +971,30 @@ if ($booksResult && $booksResult->num_rows > 0) {
                                                 $animationClass = 'bg-red-400 opacity-75';
                                                 $dotClass = 'bg-red-500';
                                             } elseif ($borrowedBook['status'] === 'borrowed') {
-                                                $statusClass = 'bg-green-100 text-green-800';
-                                                $statusText = 'Borrowed';
-                                                $animationClass = 'bg-green-400 opacity-75';
-                                                $dotClass = 'bg-green-500';
+                                                if( $daysLeft < 0) {
+                                                    $statusText = 'Overdue';
+                                                    $statusClass = 'bg-red-100 text-red-800';
+                                                    $animationClass = 'bg-red-400 opacity-75';
+                                                    $dotClass = 'bg-red-500';
+                                                }
+                                                elseif ($daysLeft <= 3) {
+                                                    $statusClass = 'bg-yellow-100 text-yellow-800';
+                                                    $statusText = 'Due Soon';
+                                                    $animationClass = 'bg-yellow-400 opacity-75';
+                                                    $dotClass = 'bg-yellow-500';
+                                                }
+                                                elseif ($daysLeft == 0) {
+                                                    $statusClass = 'bg-orange-100 text-orange-800';
+                                                    $statusText = 'Due Today';
+                                                    $animationClass = 'bg-orange-400 opacity-75';
+                                                    $dotClass = 'bg-orange-500';
+                                                }
+                                                else {
+                                                    $statusClass = 'bg-green-100 text-green-800';
+                                                    $statusText = 'Borrowed';
+                                                    $animationClass = 'bg-green-400 opacity-75';
+                                                    $dotClass = 'bg-green-500';
+                                                }
                                             } else {
                                                 // Fallback for any unexpected status
                                                 $statusClass = 'bg-gray-100 text-gray-800';
