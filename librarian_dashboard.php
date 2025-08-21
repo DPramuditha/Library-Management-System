@@ -489,7 +489,7 @@ $conn->close();
             </div>
             <div>
                 <nav class="flex-1 px-4 py-6 space-y-2">
-                    <a href="#" onclick="showSection('home')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="?section=home" onclick="showSection('home')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <!--                        <img src="../assets/home.svg" alt="Home Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -497,7 +497,7 @@ $conn->close();
 
                         <span class="text-base font-medium">Home</span>
                     </a>
-                    <a href="#" onclick="showSection('adduser')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="?section=adduser" onclick="showSection('adduser')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <!--                        <img src="../assets/circle-user.svg" alt="Profile Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -505,7 +505,7 @@ $conn->close();
 
                         <span class="text-md font-medium">Add User Account</span>
                     </a>
-                    <a href="#" onclick="showSection('manageuser')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="?section=manageuser" onclick="showSection('manageuser')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <!--                        <img src="../assets/books.svg" alt="Borrowed Books Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75a4.5 4.5 0 0 1-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 1 1-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 0 1 6.336-4.486l-3.276 3.276a3.004 3.004 0 0 0 2.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852Z" />
@@ -514,21 +514,21 @@ $conn->close();
 
                         <span class="text-md font-medium">Manage User Account</span>
                     </a>
-                    <a href="#" onclick="showSection('addbooks')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="?section=addbooks" onclick="showSection('addbooks')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <!--                        <img src="../assets/assessment.svg" alt="Search Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
                         <span class="text-md font-medium">Add Book</span>
                     </a>
-                    <a href="#" onclick="showSection('maintainbooks')" class="flex items>-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="?section=maintainbooks" onclick="showSection('maintainbooks')" class="flex items>-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <!--                        <img src="assets/feedback.svg" alt="Feedback Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
                         </svg>
                         <span class="text-md font-medium">Maintaining Books Details</span>
                     </a>
-                    <a href="#" onclick="showSection('borrowing')" class="flex items>-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="?section=borrowing" onclick="showSection('borrowing')" class="flex items>-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <!--                        <img src="assets/feedback.svg" alt="Feedback Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
@@ -1471,6 +1471,7 @@ $conn->close();
     </div>
 </div>
 <script>
+    // This function now handles showing sections and updating nav links without relying on a click event
     function showSection(sectionName) {
         // Hide all content sections
         const sections = document.querySelectorAll('.content-section');
@@ -1478,22 +1479,69 @@ $conn->close();
             section.classList.add('hidden');
         });
 
-        // Show selected section
-        document.getElementById(sectionName + '-section').classList.remove('hidden');
+        // Show the selected section
+        const sectionToShow = document.getElementById(sectionName + '-section');
+        if (sectionToShow) {
+            sectionToShow.classList.remove('hidden');
+        }
 
-        // Update active navigation item
+        // Update active state in navigation
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.classList.remove('bg-blue-500', 'text-white');
         });
 
-        // Add active class to clicked nav item
-        event.target.closest('.nav-link').classList.add('bg-blue-500', 'text-white');
+        // Find the corresponding nav link and make it active
+        // Note: This selector finds the link whose onclick attribute calls showSection with the correct name.
+        const activeNavLink = document.querySelector(`.nav-link[onclick*="showSection('${sectionName}')"]`);
+        if (activeNavLink) {
+            activeNavLink.classList.add('bg-blue-500', 'text-white');
+        }
+    }
+
+    // This code runs when the page loads to show the correct section
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section');
+
+        if (section) {
+            // If a section is specified in the URL (e.g., after a search), show it
+            showSection(section);
+        } else {
+            // Otherwise, default to the home section
+            showSection('home');
+        }
+    });
+
+    // Your existing filterByCategory and logout functions remain the same
+    function filterByCategory(category) {
+        const bookCards = document.querySelectorAll('.book-card');
+        const filterButtons = document.querySelectorAll('.category-filter');
+
+        // Update button states
+        filterButtons.forEach(button => {
+            button.classList.remove('active', 'bg-blue-100', 'text-blue-800');
+            button.classList.add('bg-gray-100', 'text-gray-800');
+        });
+
+        const activeButton = document.querySelector(`[data-category="${category}"]`);
+        activeButton.classList.add('active', 'bg-blue-100', 'text-blue-800');
+        activeButton.classList.remove('bg-gray-100', 'text-gray-800');
+
+        // Filter books
+        bookCards.forEach(card => {
+            if (category === 'all' || card.getAttribute('data-category') === category) {
+                card.style.display = 'block';
+                card.classList.remove('hidden');
+            } else {
+                card.style.display = 'none';
+                card.classList.add('hidden');
+            }
+        });
     }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            // Create a form to handle logout properly
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '';
