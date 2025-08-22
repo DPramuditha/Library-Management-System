@@ -547,13 +547,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 <!--                </div>-->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="relative overflow-hidden rounded-lg shadow-md">
-                        <img src="pages/assets/S_dashboard.jpg" alt="Library Reading"
+                        <img src="pages/assets/S_dashboard03.jpg" alt="Library Reading"
                              class="w-full h-64 object-cover transition-transform duration-700 hover:scale-110 animate-fade-in-left">
                         <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
 
                     <div class="relative overflow-hidden rounded-lg shadow-md">
-                        <img src="pages/assets/S_dashboard03.jpg" alt="Digital Library"
+                        <img src="pages/assets/S_dashboard.jpg" alt="Digital Library"
                              class="w-full h-64 object-cover transition-transform duration-700 hover:scale-110 animate-fade-in-right">
                         <div class="absolute inset-0 bg-gradient-to-l from-purple-600/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                     </div>

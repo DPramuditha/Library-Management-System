@@ -72,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
             } else {
                 $errors[] = "Failed to create user account. Please try again.";
             }
+
         }
         $stmt->close();
     } else {
@@ -761,7 +762,6 @@ $conn->close();
                                 <select id="role" name="role" required class="mt-2 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-600 sm:text-sm">
                                     <option value="">Select your role</option>
                                     <option value="student" <?php echo ($form_data['role'] ?? '') === 'student' ? 'selected' : ''; ?>>Student</option>
-                                    <option value="librarian" <?php echo ($form_data['role'] ?? '') === 'librarian' ? 'selected' : ''; ?>>Librarian</option>
                                 </select>
                             </div>
                             <div>
