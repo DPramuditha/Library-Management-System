@@ -328,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="pages/index.css" rel="stylesheet">
-    <title>Student Dashboard</title>
+    <title>Admin Dashboard</title>
 </head>
 <body>
 <div class="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -347,7 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
             </div>
             <div>
                 <nav class="flex-1 px-4 py-6 space-y-2">
-                    <a href="#" onclick="showSection('home')"
+                    <a href="?section=home" onclick="showSection('home')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
@@ -357,7 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
 
                         <span class="text-base font-medium">Home</span>
                     </a>
-                    <a href="#" onclick="showSection('adduser')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                    <a href="?section=adduser" onclick="showSection('adduser')" class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <!--                        <img src="../assets/circle-user.svg" alt="Profile Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -366,7 +366,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
                         <span class="text-md font-medium">Add User Account</span>
                     </a>
 
-                    <a href="#" onclick="showSection('maintain')"
+                    <a href="?section=maintain" onclick="showSection('maintain')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75a4.5 4.5 0 0 1-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 1 1-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 0 1 6.336-4.486l-3.276 3.276a3.004 3.004 0 0 0 2.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852Z" />
@@ -414,30 +414,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
 
                         <p class="text-lg text-gray-500">Dashboard Overview</p>
                     </div>
-                    <div class="hidden md:block relative">
-                        <input type="text" placeholder="Search..."
-                               class="w-80 pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
-                             viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </div>
                 </div>
 
                 <!-- Right side - Notifications and Profile -->
                 <div class="flex items-center space-x-4">
-                    <!-- Notification Button -->
-                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                        <!--                        <img src="assets/bell-notification-social-media.svg" alt="Notification Icon" class="h-6 w-6">-->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                            <path d="M5.85 3.5a.75.75 0 0 0-1.117-1 9.719 9.719 0 0 0-2.348 4.876.75.75 0 0 0 1.479.248A8.219 8.219 0 0 1 5.85 3.5ZM19.267 2.5a.75.75 0 1 0-1.118 1 8.22 8.22 0 0 1 1.987 4.124.75.75 0 0 0 1.48-.248A9.72 9.72 0 0 0 19.266 2.5Z" />
-                            <path fill-rule="evenodd" d="M12 2.25A6.75 6.75 0 0 0 5.25 9v.75a8.217 8.217 0 0 1-2.119 5.52.75.75 0 0 0 .298 1.206c1.544.57 3.16.99 4.831 1.243a3.75 3.75 0 1 0 7.48 0 24.583 24.583 0 0 0 4.83-1.244.75.75 0 0 0 .298-1.205 8.217 8.217 0 0 1-2.118-5.52V9A6.75 6.75 0 0 0 12 2.25ZM9.75 18c0-.034 0-.067.002-.1a25.05 25.05 0 0 0 4.496 0l.002.1a2.25 2.25 0 1 1-4.5 0Z" clip-rule="evenodd" />
-                        </svg>
-
-                        <!-- Notification badge -->
-                        <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
-                    </button>
                     <!-- Profile Icon -->
                     <button class="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
                         <img src="assets/profile-placeholder.png" alt="Profile"
@@ -468,11 +448,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
         <main class="flex-1 overflow-auto p-6">
             <!-- Home Section -->
             <div id="home-section" class="content-section">
-                <!--                <h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard Overview</h1>-->
-                <!--                <div>-->
-                <!--                    <img src="assets/S_dashboard.jpg" alt="Dashboard Image"-->
-                <!--                         class="w-full h-auto rounded-lg shadow-md mb-6">-->
-                <!--                </div>-->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="relative overflow-hidden rounded-lg shadow-md">
                         <img src="pages/assets/A_dashboard01.jpg" alt="Library Reading"
@@ -898,6 +873,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     </div>
 </div>
 <script>
+    // This function now handles showing sections and updating nav links without relying on a click event
     function showSection(sectionName) {
         // Hide all content sections
         const sections = document.querySelectorAll('.content-section');
@@ -905,22 +881,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
             section.classList.add('hidden');
         });
 
-        // Show selected section
-        document.getElementById(sectionName + '-section').classList.remove('hidden');
+        // Show the selected section
+        const sectionToShow = document.getElementById(sectionName + '-section');
+        if (sectionToShow) {
+            sectionToShow.classList.remove('hidden');
+        }
 
-        // Update active navigation item
+        // Update active state in navigation
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.classList.remove('bg-blue-500', 'text-white');
         });
 
-        // Add active class to clicked nav item
-        event.target.closest('.nav-link').classList.add('bg-blue-500', 'text-white');
+        // Find the corresponding nav link and make it active
+        // Note: This selector finds the link whose onclick attribute calls showSection with the correct name.
+        const activeNavLink = document.querySelector(`.nav-link[onclick*="showSection('${sectionName}')"]`);
+        if (activeNavLink) {
+            activeNavLink.classList.add('bg-blue-500', 'text-white');
+        }
+    }
+
+    // This code runs when the page loads to show the correct section
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section');
+
+        if (section) {
+            // If a section is specified in the URL (e.g., after a search), show it
+            showSection(section);
+        } else {
+            // Otherwise, default to the home section
+            showSection('home');
+        }
+    });
+
+    // Your existing filterByCategory and logout functions remain the same
+    function filterByCategory(category) {
+        const bookCards = document.querySelectorAll('.book-card');
+        const filterButtons = document.querySelectorAll('.category-filter');
+
+        // Update button states
+        filterButtons.forEach(button => {
+            button.classList.remove('active', 'bg-blue-100', 'text-blue-800');
+            button.classList.add('bg-gray-100', 'text-gray-800');
+        });
+
+        const activeButton = document.querySelector(`[data-category="${category}"]`);
+        activeButton.classList.add('active', 'bg-blue-100', 'text-blue-800');
+        activeButton.classList.remove('bg-gray-100', 'text-gray-800');
+
+        // Filter books
+        bookCards.forEach(card => {
+            if (category === 'all' || card.getAttribute('data-category') === category) {
+                card.style.display = 'block';
+                card.classList.remove('hidden');
+            } else {
+                card.style.display = 'none';
+                card.classList.add('hidden');
+            }
+        });
     }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            // Create a form to handle logout properly
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '';
