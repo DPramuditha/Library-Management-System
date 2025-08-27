@@ -32,8 +32,9 @@ $conn->close();
                 <div class="lg:pt-4 lg:pr-8">
                     <div class="lg:max-w-lg">
                         <h2 class="text-base/7 font-semibold text-indigo-600">Borrowing faster</h2>
-                        <p class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-5xl">XYZ Library System</p>
-                        <p class="mt-6 text-lg/8 text-gray-700">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Maiores impedit perferendis suscipit eaque, iste dolor cupiditate blanditiis ratione.</p>
+                        <p class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-4xl">LearnSphere - Library  System</p>
+                        <p class="mt-6 text-lg/8 text-gray-700">Welcome to LearnSphere!
+                            Love reading? We’ve got you covered! Our School Library Management System makes it super easy to find, borrow and explore your favorite books.  Whether you’re here to learn, research or just enjoy a good story, this is your digital space for knowledge and discovery.</p>
                         <dl class="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
                             <div class="relative pl-9">
                                 <dt class="inline font-semibold text-gray-900">

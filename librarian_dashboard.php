@@ -1221,7 +1221,7 @@ $conn->close();
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+<!--                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>-->
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Copies</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -1233,7 +1233,7 @@ $conn->close();
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#<?php echo str_pad($book['id'], 3, '0', STR_PAD_LEFT); ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo htmlspecialchars($book['title']); ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($book['author']); ?></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($book['category']); ?></td>
+<!--                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">--><?php //echo htmlspecialchars($book['category']); ?><!--</td>-->
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo $book['available_copies'] . '/' . $book['total_copies']; ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <?php
