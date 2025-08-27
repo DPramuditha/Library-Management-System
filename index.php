@@ -68,7 +68,7 @@ $conn->close();
                         </dl>
                     </div>
                     <div>
-                        <a href="login.php" class="mt-10 inline-block rounded-md bg-indigo-600 px-3.5 py-2.5 text-base/7 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 hover:scale-95 transition-transform duration-150">
+                        <a href="login.php" class="mt-5 inline-block rounded-md bg-indigo-600 px-3.5 py-2.5 text-base/7 font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 hover:scale-95 transition-transform duration-250">
                             Get started
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 ml-2 inline-block">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
