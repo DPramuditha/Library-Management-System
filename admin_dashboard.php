@@ -112,6 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
     if (empty($phone)) {
         $user_errors[] = "Phone number is required";
     }
+    if( !preg_match('/^[0-9]{10}$/', $phone)) {
+        $user_errors[] = "Phone number must be 10 digits";
+    }
     if (empty($address)) {
         $user_errors[] = "Address is required";
     }
@@ -195,6 +198,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
     if (empty($phone)) {
         $user_errors[] = "Phone number is required";
     }
+    if( !preg_match('/^[0-9]{10}$/', $phone)) {
+        $user_errors[] = "Phone number must be 10 digits";
+    }
     if (empty($address)) {
         $user_errors[] = "Address is required";
     }
@@ -244,6 +250,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
             $emailStmt->close();
         } else {
             $user_errors[] = "User not found";
+        }
+        $stmt->close();
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $phoneNumber = trim($_POST['phoneNumber'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $role = $_POST['role'] ?? '';
+
+    // Validation
+    $errors = [];
+
+    if (empty($name)) {
+        $errors[] = "Name is required";
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Valid email is required";
+    }
+
+    if (strlen($password) < 6) {
+        $errors[] = "Password must be at least 6 characters long";
+    }
+
+    if (empty($phoneNumber)) {
+        $errors[] = "Phone number is required";
+    }
+    if(!preg_match('/^[0-9]{10}$/', $phoneNumber)) {
+        $errors[] = "Phone number must be 10 digits";
+    }
+
+    if (empty($address)) {
+        $errors[] = "Address is required";
+    }
+
+    if (!in_array($role, ['student', 'librarian'])) {
+        $errors[] = "Please select a valid role";
+    }
+
+    // Check if email already exists in users table (not students table)
+    if (empty($errors)) {
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $errors[] = "Email already exists";
+        }
+        $stmt->close();
+    }
+
+    // Insert user if no errors
+    if (empty($errors)) {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        // Insert into users table (not students table)
+        $stmt = $conn->prepare("INSERT INTO users (name, email, password, phone, address, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->bind_param("ssssss", $name, $email, $hashedPassword, $phoneNumber, $address, $role);
+
+        if ($stmt->execute()) {
+            $success = "User account created successfully!";
+            $form_data = []; // Clear form data
+        } else {
+            $errors[] = "Failed to create user account. Please try again.";
         }
         $stmt->close();
     }

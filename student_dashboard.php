@@ -62,6 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     if (empty($phone)) {
         $errors[] = "Phone number is required";
     }
+    if(!preg_match('/^[0-9]{10}$/', $phone)) {
+        $errors[] = "Phone number must be 10 digits";
+    }
 
     if (empty($errors)) {
         // Check if user exists in users table and update

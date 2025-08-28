@@ -44,7 +44,6 @@ $form_data = [];
 
 // Handle Add User form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
-    // Your existing add user code here...
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -52,7 +51,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     $address = trim($_POST['address'] ?? '');
     $role = $_POST['role'] ?? '';
 
-    // Validation and insertion code remains the same...
+    // Basic validation
+    if (empty($name)) {
+        $errors[] = "Name is required";
+    }
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Valid email is required";
+    }
+    if (empty($password) || strlen($password) < 6) {
+        $errors[] = "Password must be at least 6 characters long";
+    }
+    if (empty($phoneNumber)) {
+        $errors[] = "Phone number is required";
+    }
+    if (!preg_match('/^[0-9]{10}$/', $phoneNumber)) {
+        $errors[] = "Phone number must be 10 digits";
+    }
+    if (empty($address)) {
+        $errors[] = "Address is required";
+    }
+    if (empty($role)) {
+        $errors[] = "Role is required";
+    }
+
+    // Role validation - prevent unauthorized librarian account creation
+    if ($role === 'librarian' && $_SESSION['role'] !== 'librarian') {
+        $errors[] = "You don't have permission to create librarian accounts";
+    }
+
+    // Validate role is allowed
+    if (!in_array($role, ['student', 'librarian'])) {
+        $errors[] = "Invalid role selected";
+    }
+
+    // If current user is not a librarian, they can only create student accounts
+    if ($_SESSION['role'] !== 'librarian' && $role !== 'student') {
+        $errors[] = "You can only create student accounts";
+    }
+
     if (empty($errors)) {
         $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
@@ -72,7 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
             } else {
                 $errors[] = "Failed to create user account. Please try again.";
             }
-
         }
         $stmt->close();
     } else {
@@ -320,6 +355,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
     }
     if (empty($phone)) {
         $user_errors[] = "Phone number is required";
+    }
+    if(!preg_match('/^[0-9]{10}$/', $phone)) {
+        $user_errors[] = "Phone number must be 10 digits";
     }
     if (empty($address)) {
         $user_errors[] = "Address is required";
