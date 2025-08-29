@@ -27,15 +27,8 @@ if (isset($_POST['logout']) && $_POST['logout'] == '1') {
     exit();
 }
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "libraryMS";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-if($conn->connect_error){
-    die("Connection failed: " . $conn->connect_error);
-}
+// Include database connection
+require_once 'config.php';
 
 // Handle profile update
 $updateMessage = '';

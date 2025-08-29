@@ -27,15 +27,9 @@ if (isset($_POST['logout']) && $_POST['logout'] == '1') {
     exit();
 }
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "libraryMS";
+// Include database connection
+require_once 'config.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
 // Initialize variables
 $errors = [];
