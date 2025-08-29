@@ -41,6 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($phoneNumber)) {
         $errors[] = "Phone number is required";
     }
+    if(!preg_match('/^[0-9]{10}$/', $phoneNumber)) {
+        $errors[] = "Phone number must be 10 digits";
+    }
 
     if (empty($address)) {
         $errors[] = "Address is required";
@@ -157,7 +160,7 @@ $conn->close();
 
             <div>
                 <label for="phoneNumber" class="block text-sm font-medium text-gray-900">Phone Number</label>
-                <input id="phoneNumber" placeholder="0771234567" type="number" name="phoneNumber" required autocomplete="phoneNumber"
+                <input id="phoneNumber" placeholder="0771234567" type="tel" name="phoneNumber" required autocomplete="phoneNumber"
                        value="<?php echo htmlspecialchars($formData['phone'] ?? ''); ?>"
                        class="mt-1 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:outline-indigo-600 sm:text-sm" />
             </div>

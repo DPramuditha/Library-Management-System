@@ -31,10 +31,13 @@ $conn->close();
             <div class="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
                 <div class="lg:pt-4 lg:pr-8">
                     <div class="lg:max-w-lg">
-                        <h2 class="text-base/7 font-semibold text-indigo-600">Borrowing faster</h2>
-                        <p class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-4xl">LearnSphere - Library  System</p>
-                        <p class="mt-6 text-lg/8 text-gray-700">Welcome to LearnSphere!
-                            Love reading? We’ve got you covered! Our School Library Management System makes it super easy to find, borrow and explore your favorite books.  Whether you’re here to learn, research or just enjoy a good story, this is your digital space for knowledge and discovery.</p>
+                        <h2 class="text-base/7 font-semibold text-indigo-600">Seethawaka collage</h2>
+                        <p class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-3xl">
+                            <img src=" pages/assets/online-education.gif" alt="Library Logo" class="mx-auto h-20 w-auto inline"/>
+                            LearnSphere - Library  System</p>
+                        <p class="mt-6 text-lg/8 text-gray-700">✨ Welcome to LearnSphere – Where Stories Meet Discovery
+                            Your digital gateway to endless knowledge. Borrow, explore, and unlock worlds of imagination and learning all in one place.
+                            📚 Read More. Discover More. Be More.</p>
                         <dl class="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
                             <div class="relative pl-9">
                                 <dt class="inline font-semibold text-gray-900">
