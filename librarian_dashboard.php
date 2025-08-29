@@ -29,6 +29,9 @@ if (isset($_POST['logout']) && $_POST['logout'] == '1') {
 
 // Include database connection
 require_once 'config.php';
+if (!isset($conn) || $conn->connect_error) {
+    die("Database connection failed. Please check your configuration.");
+}
 
 
 // Initialize variables

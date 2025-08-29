@@ -1,14 +1,10 @@
 <?php
 session_start();
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "libraryMS";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-if($conn->connect_error){
-    die("Connection failed: " . $conn->connect_error);
+// Include database connection
+require_once 'config.php';
+if (!isset($conn) || $conn->connect_error) {
+    die("Database connection failed. Please check your configuration.");
 }
 
 // Check if the form is submitted

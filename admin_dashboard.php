@@ -10,6 +10,9 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 
 // Include database connection
 require_once 'config.php';
+if (!isset($conn) || $conn->connect_error) {
+    die("Database connection failed. Please check your configuration.");
+}
 
 
 $userId = $_SESSION['user_id'] ?? 1;
