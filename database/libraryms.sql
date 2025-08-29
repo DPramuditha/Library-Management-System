@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Aug 27, 2025 at 11:11 AM
+-- Generation Time: Aug 29, 2025 at 07:49 AM
 -- Server version: 8.3.0
 -- PHP Version: 8.2.18
 
@@ -66,7 +66,6 @@ INSERT INTO `books` (`id`, `title`, `author`, `isbn`, `category`, `description`,
 (13, 'The Alchemist', 'Paulo Coelho', '978-0062315007', 'Fiction', 'A philosophical story about following one’s dreams, centered on a young Andalusian shepherd.', '', '1988', 'HarperOne', 4, 1, 'available', '2025-08-10 18:30:10', '2025-08-12 20:16:37'),
 (17, 'Hevanella', 'K. Jayatillake', NULL, 'Fiction', 'A Sinhala novel of adventure and rebellion, following a young man’s journey through societal challenges in colonial Sri Lanka.', '', '1960', 'S. Godage & Brothers', 3, 3, 'available', '2025-08-15 07:35:18', '2025-08-15 07:35:18'),
 (18, 'Amba Yahaluwo', 'T.B. Ilangaratne', NULL, 'Fiction', 'A touching Sinhala novel about two boys from different social classes, exploring friendship and social divides in rural Sri Lanka.', 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1301313687i/4575781._UX160_.jpg', '1957', 'M.D. Gunasena', 4, 4, 'available', '2025-08-15 07:35:18', '2025-08-25 18:20:43'),
-(37, 'Assassin’s Creed: Underworld', 'Oliver Bowden', '978-1405918862', 'Fiction', 'A historical action novel tied to the Assassin’s Creed series, popular among Sri Lankan gamers and adventure readers.', 'https://cms.sarasavi.lk/storage/product/1405918861.jpg', '2015', 'Penguin Books', 4, 3, 'available', '2025-08-25 19:27:03', '2025-08-25 19:27:03'),
 (31, 'Kaliyugaya', 'Martin Wickramasinghe', NULL, 'Fiction', '\'A Sinhala novel continuing the saga of Gamperaliya, exploring the impact of modernization on a traditional Sri Lankan family.', '', '1997', 'Tisara Prakasakayo', 4, 2, 'available', '2025-08-19 04:46:49', '2025-08-19 07:19:36'),
 (32, 'The Seven Moons of Maali Almeida', 'Shehan Karunatilaka', '978-1908745903', 'Fiction', 'A satirical Sinhala novel about a war photographer navigating the afterlife to solve his murder during Sri Lanka’s civil war. Winner of the 2022 Booker Prize.', 'https://img.chirpbooks.com/image/upload/q_auto:good,w_960,h_960/v1685818326/cover_images/tantor/9781696611251.jpg', '2022', 'Sort of Books', 5, 4, 'available', '2025-08-25 19:27:03', '2025-08-25 19:27:03'),
 (33, 'Code Name Faust', 'A.G. Taylor', '978-1838777838', 'Fiction', 'A thrilling young adult novel involving espionage and adventure, appealing to Sri Lankan readers of action-packed stories.', 'https://cms.sarasavi.lk/storage/product/1838777830.jpg', '2023', 'Bonnier Books', 3, 3, 'available', '2025-08-25 19:27:03', '2025-08-25 19:27:03'),
@@ -74,14 +73,7 @@ INSERT INTO `books` (`id`, `title`, `author`, `isbn`, `category`, `description`,
 (35, 'Every Time I Go on Vacation Someone Dies', 'Catherine Mack', '978-1035032082', 'Fiction', 'A humorous mystery novel about a writer whose vacations turn deadly, engaging Sri Lankan fans of cozy mysteries.', 'https://cms.sarasavi.lk/storage/product/1035032082.jpg', '2024', 'Macmillan', 4, 4, 'available', '2025-08-25 19:27:03', '2025-08-25 19:27:03'),
 (36, 'Camellia', 'Kumuduni Dias Hapangama', '978-9553128812', 'Fiction', 'A Sinhala novel exploring family dynamics and social issues in modern Sri Lanka, resonating with local readers.', 'https://cms.sarasavi.lk/storage/product/9553128815.jpg', '2020', 'Sarasavi Publishers', 3, 3, 'available', '2025-08-25 19:27:03', '2025-08-25 19:27:03'),
 (38, 'Wednesday', 'Gaby Morgan', '978-0241760741', 'Fiction', 'A collection of poems inspired by the Wednesday Addams character, appealing to Sri Lankan fans of gothic and pop culture.', 'https://cms.sarasavi.lk/storage/product/0241760747.jpg', '2023', 'Penguin Random House', 3, 2, 'borrowed', '2025-08-25 19:27:03', '2025-08-25 19:27:03'),
-(39, 'The Seven Moons of Maali Almeida', 'Shehan Karunatilaka', 'null', 'Fiction', 'A satirical Sinhala novel about a war photographer navigating the afterlife to solve his murder during Sri Lanka’s civil war. Winner of the 2022 Booker Prize.', 'https://img.chirpbooks.com/image/upload/q_auto:good,w_960,h_960/v1685818326/cover_images/tantor/9781696611251.jpg', '2022', 'Sort of Books', 5, 4, 'available', '2025-08-25 19:39:44', '2025-08-25 19:39:44'),
-(40, 'The Seven Moons of Maali Almeida', 'Shehan Karunatilaka', NULL, 'Fiction', 'A satirical Sinhala novel about a war photographer navigating the afterlife to solve his murder during Sri Lanka’s civil war. Winner of the 2022 Booker Prize.', 'https://img.chirpbooks.com/image/upload/q_auto:good,w_960,h_960/v1685818326/cover_images/tantor/9781696611251.jpg', '2022', 'Sort of Books', 5, 4, 'available', '2025-08-25 19:42:46', '2025-08-25 19:42:46'),
-(41, 'Code Name Faust', 'A.G. Taylor', NULL, 'Fiction', 'A thrilling young adult novel involving espionage and adventure, appealing to Sri Lankan readers of action-packed stories.', 'https://cms.sarasavi.lk/storage/product/1838777830.jpg', '2023', 'Bonnier Books', 3, 3, 'available', '2025-08-25 19:42:46', '2025-08-25 19:42:46'),
-(42, 'Mile High', 'Liz Tomforde', NULL, 'Fiction', 'A contemporary romance novel set in the world of sports, popular among Sri Lankan readers for its emotional depth.', 'https://cms.sarasavi.lk/storage/product/1399728547.jpg', '2022', 'Hodder & Stoughton', 3, 2, 'borrowed', '2025-08-25 19:42:46', '2025-08-25 19:42:46'),
-(43, 'Every Time I Go on Vacation Someone Dies', 'Catherine Mack', NULL, 'Fiction', 'A humorous mystery novel about a writer whose vacations turn deadly, engaging Sri Lankan fans of cozy mysteries.', 'https://cms.sarasavi.lk/storage/product/1035032082.jpg', '2024', 'Macmillan', 4, 4, 'available', '2025-08-25 19:42:46', '2025-08-25 19:42:46'),
-(44, 'Camellia', 'Kumuduni Dias Hapangama', NULL, 'Fiction', 'A Sinhala novel exploring family dynamics and social issues in modern Sri Lanka, resonating with local readers.', 'https://cms.sarasavi.lk/storage/product/9553128815.jpg', '2020', 'Sarasavi Publishers', 3, 3, 'available', '2025-08-25 19:42:46', '2025-08-25 19:42:46'),
-(45, 'Assassin’s Creed: Underworld', 'Oliver Bowden', NULL, 'Fiction', 'A historical action novel tied to the Assassin’s Creed series, popular among Sri Lankan gamers and adventure readers.', 'https://cms.sarasavi.lk/storage/product/1405918861.jpg', '2015', 'Penguin Books', 4, 3, 'available', '2025-08-25 19:42:46', '2025-08-25 19:42:46'),
-(46, 'Wednesday', 'Gaby Morgan', NULL, 'Fiction', 'A collection of poems inspired by the Wednesday Addams character, appealing to Sri Lankan fans of gothic and pop culture.', 'https://cms.sarasavi.lk/storage/product/0241760747.jpg', '2023', 'Penguin Random House', 3, 2, 'borrowed', '2025-08-25 19:42:46', '2025-08-25 19:42:46');
+(45, 'Assassin’s Creed: Underworld', 'Oliver Bowden', NULL, 'Fiction', 'A historical action novel tied to the Assassin’s Creed series, popular among Sri Lankan gamers and adventure readers.', 'https://cms.sarasavi.lk/storage/product/1405918861.jpg', '2015', 'Penguin Books', 4, 3, 'available', '2025-08-25 19:42:46', '2025-08-25 19:42:46');
 
 -- --------------------------------------------------------
 
@@ -133,7 +125,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `users`
@@ -142,7 +134,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `phone`, `address`, `role`, `created_at`) VALUES
 (1, 'dimuthu pramuditha', 'dimuthu02@gmail.com', '$2y$10$3n2TJ9OhKJOuTkYRFjGjFOPBeY3fZurQc6vliK2EXCUsRyca7K7ya', '0712564978', '80/A Gampaha, Kirindiwela', 'librarian', '2025-08-09 10:17:01'),
 (2, 'dimuthu pramuditha', 'dimuthu01@gmail.com', '$2y$10$zBeqTBf1zJdMliEA/TmrHeMkCcfRRpTZLgp7TaHW1w9wfo4HHZ9Na', '0712564974', '80/N Gampaha, Kirindiwela', 'student', '2025-08-09 10:18:13'),
-(4, 'dimuthu pra', 'dimuthu03@gmail.com', '$2y$10$Q7feKuijtop/uuXIpeNSkeCXhxze6cfgPbux3kq7JBaPLkO1EGMRe', '0712564988', '80/A Gampaha, Kirindiwela', 'student', '2025-08-09 15:23:17'),
+(4, 'dimuthu pram', 'dimuthu03@gmail.com', '$2y$10$Q7feKuijtop/uuXIpeNSkeCXhxze6cfgPbux3kq7JBaPLkO1EGMRe', '0712564988', '80/A Gampaha, Kirindiwela', 'student', '2025-08-09 15:23:17'),
 (7, 'Admin User', 'admin@library.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '1234567890', 'Admin Office', 'admin', '2025-08-17 04:48:53');
 COMMIT;
 
