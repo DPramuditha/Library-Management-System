@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script
+            src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.1/dist/dotlottie-wc.js"
+            type="module"
+    ></script>
     <link href="index.css" rel="stylesheet">
     <title>Student Dashboard</title>
 </head>
@@ -26,7 +30,7 @@
                 <nav class="flex-1 px-4 py-6 space-y-2">
                     <a href="#" onclick="showSection('home')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
-                        <!--                        <img src="../assets/home.svg" alt="Home Icon" class="h-7 w-7 mr-2">-->
+                        <!--                        <img pages_html="../assets/home.svg" alt="Home Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -37,7 +41,7 @@
                     </a>
                     <a href="#" onclick="showSection('profile')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
-                        <!--                        <img src="../assets/circle-user.svg" alt="Profile Icon" class="h-7 w-7 mr-2">-->
+                        <!--                        <img pages_html="../assets/circle-user.svg" alt="Profile Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -48,7 +52,7 @@
                     </a>
                     <a href="#" onclick="showSection('borrowed')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
-                        <!--                        <img src="../assets/books.svg" alt="Borrowed Books Icon" class="h-7 w-7 mr-2">-->
+                        <!--                        <img pages_html="../assets/books.svg" alt="Borrowed Books Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -59,7 +63,7 @@
                     </a>
                     <a href="#" onclick="showSection('search')"
                        class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
-                        <!--                        <img src="../assets/assessment.svg" alt="Search Icon" class="h-7 w-7 mr-2">-->
+                        <!--                        <img pages_html="../assets/assessment.svg" alt="Search Icon" class="h-7 w-7 mr-2">-->
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                              class="size-6 mr-2">
                             <path fill-rule="evenodd"
@@ -69,12 +73,19 @@
 
                         <span class="text-md font-medium">Search Books</span>
                     </a>
-                    <a href="#"
-                       class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077 1.41-.513m14.095-5.13 1.41-.513M5.106 17.785l1.15-.964m11.49-9.642 1.149-.964M7.501 19.795l.75-1.3m7.5-12.99.75-1.3m-6.063 16.658.26-1.477m2.605-14.772.26-1.477m0 17.726-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205 12 12m6.894 5.785-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495" />
-                        </svg>
-                        <span class="text-md font-medium">Settings</span>
+                    <a>
+                        <a href="#" onclick="showSection('ai')"
+                           class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+<!--                            <img src="../assets/microchip-ai.svg" alt="Ai" class="h-7 w-7 mr-2">-->
+                            <dotlottie-wc
+                                    src="animation_assets/Star Loader 2.json"
+                                    style="width: 30px;height: 30px"
+                                    autoplay
+                                    loop
+                            ></dotlottie-wc>
+
+                            <span class="text-md font-medium">Ai Summarize</span>
+                        </a>
                     </a>
                 </nav>
             </div>
@@ -131,7 +142,12 @@
                 <div class="flex items-center space-x-4">
                     <!-- Notification Button -->
                     <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                        <img src="../assets/bell-notification-social-media.svg" alt="Notification Icon" class="h-6 w-6">
+<!--                        <img src="../assets/bell-notification-social-media.svg" alt="Notification Icon" class="h-6 w-6">-->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                            <path d="M5.85 3.5a.75.75 0 0 0-1.117-1 9.719 9.719 0 0 0-2.348 4.876.75.75 0 0 0 1.479.248A8.219 8.219 0 0 1 5.85 3.5ZM19.267 2.5a.75.75 0 1 0-1.118 1 8.22 8.22 0 0 1 1.987 4.124.75.75 0 0 0 1.48-.248A9.72 9.72 0 0 0 19.266 2.5Z" />
+                            <path fill-rule="evenodd" d="M12 2.25A6.75 6.75 0 0 0 5.25 9v.75a8.217 8.217 0 0 1-2.119 5.52.75.75 0 0 0 .298 1.206c1.544.57 3.16.99 4.831 1.243a3.75 3.75 0 1 0 7.48 0 24.583 24.583 0 0 0 4.83-1.244.75.75 0 0 0 .298-1.205 8.217 8.217 0 0 1-2.118-5.52V9A6.75 6.75 0 0 0 12 2.25ZM9.75 18c0-.034 0-.067.002-.1a25.05 25.05 0 0 0 4.496 0l.002.1a2.25 2.25 0 1 1-4.5 0Z" clip-rule="evenodd" />
+                        </svg>
+
                         <!-- Notification badge -->
                         <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
                     </button>
@@ -159,7 +175,7 @@
             <div id="home-section" class="content-section">
                 <!--                <h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard Overview</h1>-->
                 <!--                <div>-->
-                <!--                    <img src="assets/S_dashboard.jpg" alt="Dashboard Image"-->
+                <!--                    <img pages_html="assets/S_dashboard.jpg" alt="Dashboard Image"-->
                 <!--                         class="w-full h-auto rounded-lg shadow-md mb-6">-->
                 <!--                </div>-->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -576,7 +592,7 @@
             <div id="search-section" class="content-section hidden">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Search Books</h1>
 <!--                <div>-->
-<!--                    <img src="assets/Search_Books01.jpg" alt="Search Books"-->
+<!--                    <img pages_html="assets/Search_Books01.jpg" alt="Search Books"-->
 <!--                         class="w-full h-100 object-cover rounded-lg shadow-md mb-6">-->
 <!--                </div>-->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -711,6 +727,52 @@
                     </div>
                 </div>
             </div>
+            <!-- AI Chat Section -->
+            <div id="ai-section" class="content-section hidden">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">AI Book Summarizer</h1>
+
+                <!-- Chat Container -->
+                <div class="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
+                    <!-- Chat Header -->
+                    <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <img src="../assets/microchip-ai.svg" alt="AI" class="h-6 w-6">
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">AI Book Summarizer</h3>
+                                <p class="text-sm opacity-90">Ask me to summarize any book or answer questions about literature</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div class="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50 " id="chat-display">
+                        <!-- Messages will be appended here dynamically -->
+
+                    </div>
+
+                    <!-- Chat Input Area -->
+                    <div class="p-4 bg-white border-t border-gray-200" id="chat-input-area">
+                        <div class="flex items-center space-x-3">
+                            <input
+                                    type="text"
+                                    id="user-input"
+                                    placeholder="Type your message..."
+                                    class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 hover:border-purple-500 transition duration-200 hover:shadow-lg hover:shadow-purple-200"
+                            />
+                            <button
+                                    onclick="sendMessage()"
+                                    id="send-button"
+                                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-200 hover:scale-95 flex transition-all duration-300 ease-in-out items-center hover:shadow-lg hover:shadow-purple-300"
+                            >
+                                <img src="../assets/message-arrow-up-right.svg" alt="Send" class="h-6 w-6">
+
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </div>
@@ -744,7 +806,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script src="../main.js"></script>
+<script type="module" src="../AI_Book_Summarizer/Github_Summarizer.js"></script>
 </body>
 </html>

@@ -12,5 +12,11 @@
   "type": "commonjs",
   "devDependencies": {
     "tailwindcss": "^4.1.11"
+  },
+  "dependencies": {
+    "@lottiefiles/dotlottie-web": "^0.53.1",
+    "dotenv": "^17.2.2",
+    "marked": "^16.3.0",
+    "openai": "^5.20.2"
   }
 }

@@ -1,0 +1,30 @@
+# Node.js
+node_modules/
+dist/
+build/
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# PHP / Composer
+vendor/
+.phpunit.result.cache
+coverage/
+junit.xml
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# IDEs / Editors
+.idea/
+.vscode/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+.DS_Store
+config.js
