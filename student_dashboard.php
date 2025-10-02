@@ -376,6 +376,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script
+            src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.1/dist/dotlottie-wc.js"
+            type="module"
+    ></script>
     <link href="pages/index.css" rel="stylesheet">
     <title>Student Dashboard</title>
 </head>
@@ -445,13 +450,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
                         <span class="text-md font-medium">Change Password</span>
                     </a>
+                        <a href="?section=ai" onclick="showSection('ai')"
+                           class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                            <!--                            <img src="../assets/microchip-ai.svg" alt="Ai" class="h-7 w-7 mr-2">-->
+                            <dotlottie-wc
+                                    src="animation_assets/Star Loader 2.json"
+                                    style="width: 30px;height: 30px"
+                                    autoplay
+                                    loop
+                            ></dotlottie-wc>
+
+                            <span class="text-md font-medium">Ai Summarize</span>
+                        </a>
                 </nav>
             </div>
             <div class="p-4">
                 <div class="text-white rounded-lg shadow-md p-4">
                     <div>
                         <img src="pages/assets/38091993_8598876.jpg" alt="Reading Icon"
-                             class="h-55 w-100 mx-auto">
+                             class="h-45 w-100 mx-auto">
                     </div>
                 </div>
             </div>
@@ -1324,6 +1341,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     </form>
                 </div>
             </div>
+            <!-- AI Chat Section -->
+            <div id="ai-section" class="content-section hidden">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">AI Book Summarizer</h1>
+
+                <!-- Chat Container -->
+                <div class="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
+                    <!-- Chat Header -->
+                    <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <img src="assets/microchip-ai.svg" alt="AI" class="h-6 w-6">
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">AI Book Summarizer</h3>
+                                <p class="text-sm opacity-90">Ask me to summarize any book or answer questions about literature</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div class="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50 " id="chat-display">
+                        <!-- Messages will be appended here dynamically -->
+
+                    </div>
+
+                    <!-- Chat Input Area -->
+                    <div class="p-4 bg-white border-t border-gray-200" id="chat-input-area">
+                        <div class="flex items-center space-x-3">
+                            <input
+                                    type="text"
+                                    id="user-input"
+                                    placeholder="Type your message..."
+                                    class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 hover:border-purple-500 transition duration-200 hover:shadow-lg hover:shadow-purple-200"
+                            />
+                            <button
+                                    onclick="sendMessage()"
+                                    id="send-button"
+                                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-200 hover:scale-95 flex transition-all duration-300 ease-in-out items-center hover:shadow-lg hover:shadow-purple-300"
+                            >
+                                <img src="assets/message-arrow-up-right.svg" alt="Send" class="h-6 w-6">
+
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </div>
@@ -1445,7 +1508,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         });
     }
 </script>
-
+<script type="module" src="AI_Book_Summarizer/Github_Summarizer.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

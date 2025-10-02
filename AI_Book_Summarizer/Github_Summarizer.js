@@ -71,10 +71,10 @@ function showLoadingMessage() {
     chatContainer.className = 'flex items-start space-x-3';
     chatContainer.innerHTML = `
         <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <img src="../animation_assets/artificial-intelligence.gif" alt="AI" class="h-8 w-8">
+            <img src="animation_assets/artificial-intelligence.gif" alt="AI" class="h-8 w-8">
         </div>
         <div class="bg-white p-3 rounded-lg shadow-md max-w-md border border-gray-200 flex items-center">
-            <img src="../animation_assets/opportunities.gif" alt="Loading" class="h-10 w-10 mr-2">
+            <img src="animation_assets/opportunities.gif" alt="Loading" class="h-10 w-10 mr-2">
             <p class="text-gray-800">AI is thinking...</p>
         </div>
     `;
