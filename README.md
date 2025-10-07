@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📚 Library Management System
+# <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Telegram-Animated-Emojis/main/Objects/Books.webp" alt="Books" width="100" height="100" /> Library Management System
 **A Modern Web-Based Solution for Digital Library Operations**
 
 <div align="center">
@@ -98,7 +98,7 @@ The Library Management System is a comprehensive web application designed to str
 </tr>
 </table>
 
-## 📁 Project Architecture
+## <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Telegram-Animated-Emojis/main/Objects/Card%20Index%20Dividers.webp" alt="Card Index Dividers" width="50" height="50" /> Project Architecture
 
 ```
 📦 librarymanagementsystem/
@@ -201,6 +201,39 @@ We love contributions! Here's how you can help:
 3. 💻 Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. 📤 Push to the branch (`git push origin feature`)
 5. 🎉 Open a Pull Request
+
+---
+
+## 👥 Contributors 
+
+<div align="center">
+
+### Thanks to these amazing people who have contributed to this project! 🎉
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/DPramuditha">
+        <img src="https://github.com/DPramuditha.png" width="100px;" alt="DPramuditha"/>
+        <br />
+        <sub><b>DPramuditha</b></sub>
+      </a>
+      <br />
+      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Hammer%20and%20Wrench.png" alt="Developer" width="20" height="20" /> 
+    </td>
+    <td align="center">
+      <a href="https://github.com/AmashaUdugama">
+        <img src="https://github.com/AmashaUdugama.png" width="100px;" alt="AmashaUdugama"/>
+        <br />
+        <sub><b>AmashaUdugama</b></sub>
+      </a>
+      <br />
+      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png" alt="Contributor" width="20" height="20" /> 
+    </td>
+  </tr>
+</table>
+
+</div>
 
 ---
 
