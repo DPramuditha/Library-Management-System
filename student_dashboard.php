@@ -1351,7 +1351,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-lg">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                                <img src="assets/microchip-ai.svg" alt="AI" class="h-6 w-6">
+                                <img src="animation_assets/artificial-intelligence.gif" alt="AI" class="h-6 w-6">
                             </div>
                             <div>
                                 <h3 class="font-semibold">AI Book Summarizer</h3>
@@ -1367,21 +1367,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     </div>
 
                     <!-- Chat Input Area -->
-                    <div class="p-4 bg-white border-t border-gray-200" id="chat-input-area">
-                        <div class="flex items-center space-x-3">
+                    <div class="p-4 bg-white/30 backdrop-blur-sm " id="chat-input-area">
+                        <div class="flex items-center justify-center space-x-3">
                             <input
                                     type="text"
                                     id="user-input"
                                     placeholder="Type your message..."
-                                    class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 hover:border-purple-500 transition duration-200 hover:shadow-lg hover:shadow-purple-200"
+                                    class="flex-1 p-2 max-w-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 border-purple-500 transition duration-200 shadow-lg hover:shadow-purple-200"
                             />
                             <button
                                     onclick="sendMessage()"
                                     id="send-button"
-                                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-200 hover:scale-95 flex transition-all duration-300 ease-in-out items-center hover:shadow-lg hover:shadow-purple-300"
+                                    class="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition duration-200 hover:scale-95 flex transition-all duration-300 ease-in-out items-center shadow-xl hover:shadow-lg hover:shadow-purple-300"
                             >
-                                <img src="assets/message-arrow-up-right.svg" alt="Send" class="h-6 w-6">
-
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                                </svg>
                             </button>
                         </div>
                     </div>
