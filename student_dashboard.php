@@ -386,23 +386,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 </head>
 <body>
 <div class="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-overlay" class="hidden fixed inset-0 bg-opacity-50 z-40 lg:hidden"></div>
+    
     <!-- Sidebar -->
-    <div class="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transition-all duration-300 ease-in-out lg:block lg:static lg:inset-0">
+    <div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:static lg:inset-0">
         <div class="flex flex-col h-full">
             <div class="flex items-center justify-between h-20 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 <div class="flex items-center">
-                    <img src="assets/books02.gif" alt="Logo" class="h-15 w-15 rounded-lg">
+                    <img src="assets/books02.gif" alt="Logo" class="h-12 w-12 rounded-lg">
                 </div>
                 <div class="text-xl font-bold">
-                    <span class="text-2xl font-bold">Student Portal</span>
+                    <span class="text-lg lg:text-2xl font-bold">Student Portal</span>
                 </div>
-                <button class="lg:hidden p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
+                <button id="close-sidebar" class="lg:hidden p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
             </div>
             <div>
                 <nav class="flex-1 px-4 py-6 space-y-2">
                     <a href="?section=home" onclick="showSection('home')"
-                       class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                       class="nav-link flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -412,7 +418,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <span class="text-base font-medium">Home</span>
                     </a>
                     <a href="?section=profile" onclick="showSection('profile')"
-                       class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                       class="nav-link flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -422,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <span class="text-md font-medium">Profile</span>
                     </a>
                     <a href="?section=borrowed" onclick="showSection('borrowed')"
-                       class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                       class="nav-link flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6 mr-2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -432,7 +438,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <span class="text-md font-medium">Borrowed Books</span>
                     </a>
                     <a href="?section=search" onclick="showSection('search')"
-                       class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                       class="nav-link flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                              class="size-6 mr-2">
                             <path fill-rule="evenodd"
@@ -443,7 +449,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         <span class="text-md font-medium">Search Books</span>
                     </a>
                     <a href="?section=change-password" onclick="showSection('change-password')"
-                       class="flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
+                       class="nav-link flex items-center px-3 py-2 rounded-lg hover:bg-blue-500 shadow-md hover:transform duration-300 hover:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
                             <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
                         </svg>
@@ -464,7 +470,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                         </a>
                 </nav>
             </div>
-            <div class="p-4">
+            <div class="p-4 hidden lg:block">
                 <div class="text-white rounded-lg shadow-md p-4">
                     <div>
                         <img src="pages/assets/38091993_8598876.jpg" alt="Reading Icon"
@@ -474,7 +480,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             </div>
             <nav class="flex-1 px-4 py-6 space-y-2">
                 <a href="logout.php" onclick="return confirm('Are you sure you want to logout?')"
-                   class="flex items-center px-3 py-2 rounded-lg hover:bg-red-500 shadow-md hover:transform duration-300 hover:scale-95">
+                   class="nav-link flex items-center px-3 py-2 rounded-lg hover:bg-red-500 shadow-md hover:transform duration-300 hover:scale-95">
                     <img src="assets/user-logout.svg" alt="Logout Icon" class="h-6 w-6 mr-2">
                     <span class="text-base font-medium">Logout</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -491,8 +497,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     <div class="flex-1 flex flex-col lg:ml-0">
         <!-- Header -->
         <header class="bg-white shadow-sm border-b border-gray-200 backdrop-blur-lg bg-opacity-90">
-            <div class="flex items-center justify-between h-18 px-6">
+            <div class="flex items-center justify-between h-16 lg:h-18 px-4 lg:px-6">
                 <div class="flex items-center space-x-4">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-btn" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
                     <div class="flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-7">
                             <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.067-.248.172-.311a54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
@@ -533,7 +545,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-auto p-6">
+        <main class="flex-1 overflow-auto p-4 lg:p-6">
             <!-- Home Section -->
             <div id="home-section" class="content-section">
                 <!--                <h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard Overview</h1>-->
@@ -541,16 +553,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 <!--                    <img src="assets/S_dashboard.jpg" alt="Dashboard Image"-->
                 <!--                         class="w-full h-auto rounded-lg shadow-md mb-6">-->
                 <!--                </div>-->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 hidden md:grid">
                     <div class="relative overflow-hidden rounded-lg shadow-md">
                         <img src="pages/assets/S_dashboard03.jpg" alt="Library Reading"
-                             class="w-full h-64 object-cover transition-transform duration-700 hover:scale-110 animate-fade-in-left">
+                             class="w-full h-48 md:h-64 object-cover transition-transform duration-700 hover:scale-110 animate-fade-in-left">
                         <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
 
                     <div class="relative overflow-hidden rounded-lg shadow-md">
                         <img src="pages/assets/S_dashboard.jpg" alt="Digital Library"
-                             class="w-full h-64 object-cover transition-transform duration-700 hover:scale-110 animate-fade-in-right">
+                             class="w-full h-48 md:h-64 object-cover transition-transform duration-700 hover:scale-110 animate-fade-in-right">
                         <div class="absolute inset-0 bg-gradient-to-l from-purple-600/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
                 </div>
@@ -723,7 +735,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
             <!-- Profile Section - Updated -->
             <div id="profile-section" class="content-section hidden">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
+                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
 
                 <!-- Success/Error Message -->
                 <?php if (!empty($updateMessage)): ?>
@@ -744,14 +756,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     </div>
                 <?php endif; ?>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 hidden md:grid">
                     <div class="relative overflow-hidden rounded-lg shadow-md">
                         <img src="pages/assets/profile02.jpg" alt="Library Reading"
-                             class="w-full h-80 object-cover transition-transform duration-700 hover:scale-110">
+                             class="w-full h-60 md:h-80 object-cover transition-transform duration-700 hover:scale-110">
                     </div>
                     <div class="relative overflow-hidden rounded-lg shadow-md">
                         <img src="pages/assets/profile01.jpg" alt="Digital Library"
-                             class="w-full h-80 object-cover transition-transform duration-700 hover:scale-110">
+                             class="w-full h-60 md:h-80 object-cover transition-transform duration-700 hover:scale-110">
                     </div>
                 </div>
 
@@ -834,11 +846,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
             <!-- Borrowed Books Section -->
             <div id="borrowed-section" class="content-section hidden">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">My Borrowed Books</h1>
+                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">My Borrowed Books</h1>
 
-                <div class="mb-6">
+                <div class="mb-6 hidden md:block">
                     <img src="pages/assets/Borrowed Books.jpg" alt="Borrowed Books"
-                         class="w-full h-64 object-cover rounded-lg shadow-md">
+                         class="w-full h-48 md:h-64 object-cover rounded-lg shadow-md">
                 </div>
 
                 <!-- Statistics Cards -->
@@ -1050,7 +1062,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
             <!-- Search Books Section -->
             <div id="search-section" class="content-section hidden">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">Search Books</h1>
+                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Search Books</h1>
 
                 <!-- Success/Error Messages -->
                 <?php if (isset($borrow_success)): ?>
@@ -1256,7 +1268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             </div>
             <!-- Password Change Section -->
             <div id="change-password-section" class="content-section hidden ">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">Change Password</h1>
+                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Change Password</h1>
 
                 <!-- Success Message -->
                 <?php if (isset($password_success)): ?>
@@ -1432,6 +1444,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             // Otherwise, default to the home section
             showSection('home');
         }
+
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', openSidebar);
+        }
+
+        if (closeSidebarBtn) {
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebar);
+        }
+
+        // Close sidebar when clicking a nav link on mobile
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 1024) {
+                    closeSidebar();
+                }
+            });
+        });
     });
 
     // Your existing filterByCategory and logout functions remain the same
