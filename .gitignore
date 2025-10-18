@@ -28,3 +28,4 @@ Thumbs.db
 ehthumbs.db
 .DS_Store
 config.js
+/node_modules/
