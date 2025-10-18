@@ -20,11 +20,10 @@
 ## 🎯 Overview
 The Library Management System is a comprehensive web application designed to streamline library operations across three distinct user roles. Built with modern web technologies, it provides an intuitive interface for managing books, users, and borrowing activities.
 
-## ✨ Features 
-<img src="https://user-images.githubusercontent.com/74038190/216122041-518ac897-8d92-4c6b-9b3f-ca01dcaf38ee.png" width="150" height="150">
+## <img src="https://user-images.githubusercontent.com/74038190/216122041-518ac897-8d92-4c6b-9b3f-ca01dcaf38ee.png" width="50" height="50"> Features 
 <div>
   
-  ## AI Book Summarizer Integration <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png" alt="Robot" width="50" height="50" />
+  ## <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png" alt="Robot" width="40" height="40" /> AI Book Summarizer Integration 
  
   
   The **AI Book Summarizer** is seamlessly integrated into the student dashboard, providing:
@@ -219,7 +218,8 @@ We love contributions! Here's how you can help:
         <sub><b>DPramuditha</b></sub>
       </a>
       <br />
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Hammer%20and%20Wrench.png" alt="Developer" width="20" height="20" /> 
+      <!-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Hammer%20and%20Wrench.png" alt="Developer" width="20" height="20" />  -->
+      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Telegram-Animated-Emojis/main/People/Man%20Technologist.webp" alt="Man Technologist" width="30" height="30" />
     </td>
     <td align="center">
       <a href="https://github.com/AmashaUdugama">
@@ -228,7 +228,8 @@ We love contributions! Here's how you can help:
         <sub><b>AmashaUdugama</b></sub>
       </a>
       <br />
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png" alt="Contributor" width="20" height="20" /> 
+      <!-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png" alt="Developer" width="20" height="20" />  -->
+      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Telegram-Animated-Emojis/main/People/Woman%20Technologist.webp" alt="Woman Technologist" width="30" height="30" />
     </td>
   </tr>
 </table>
@@ -244,6 +245,7 @@ We love contributions! Here's how you can help:
 **DPramuditha**
 
 [![GitHub](https://img.shields.io/badge/GitHub-DPramuditha-181717?style=for-the-badge&logo=github)](https://github.com/DPramuditha)
+[![GitHub](https://img.shields.io/badge/GitHub-AmashaUdugama-181717?style=for-the-badge&logo=github)](https://github.com/AmashaUdugama)
 [![Email](https://img.shields.io/badge/Email-Contact%20Me-D14836?style=for-the-badge&logo=gmail)](mailto:your.email@example.com)
 
 </div>
