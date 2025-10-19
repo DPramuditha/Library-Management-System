@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../../config.js';
 
 const githubToken = config.githubToken;
 const apiUrl = 'https://models.inference.ai.azure.com/chat/completions';
@@ -58,6 +58,7 @@ async function sendMessage() {
         }
     } catch (error) {
         console.error('Error:', error);
+        console.log('Token being used: ', githubToken ? "Token Exists" : "Token Missing");
         // Remove loading animation
         removeLoadingMessage(loadingId);
 

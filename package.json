@@ -11,7 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.13"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-web": "^0.53.1",
