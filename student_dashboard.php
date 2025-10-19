@@ -1379,25 +1379,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     </div>
 
                     <!-- Chat Input Area -->
-                    <div class="p-4 bg-white/30 backdrop-blur-sm " id="chat-input-area">
+                    <div class="p-4 bg-white/30 backdrop-blur-sm" id="chat-input-area">
                         <div class="flex items-center justify-center space-x-3">
+                            <input type="file" id="user-images-input" accept="image/*" class="hidden" />
+
+                            <button
+                                    id="send-images-button"
+                                    class="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition duration-200 hover:scale-95 flex transition-all duration-300 ease-in-out items-center shadow-xl hover:shadow-lg hover:shadow-purple-300"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                                </svg>
+                            </button>
+
+                            <div id="images-preview" class="mt-2 hidden">
+                                <img id="preview-image" class="w-20 h-auto rounded-lg">
+                            </div>
+
                             <input
                                     type="text"
                                     id="user-input"
                                     placeholder="Type your message..."
                                     class="flex-1 p-2 max-w-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 border-purple-500 transition duration-200 shadow-lg hover:shadow-purple-200"
                             />
+
                             <button
-                                    onclick="sendMessage()"
                                     id="send-button"
                                     class="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition duration-200 hover:scale-95 flex transition-all duration-300 ease-in-out items-center shadow-xl hover:shadow-lg hover:shadow-purple-300"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
                                 </svg>
+
                             </button>
                         </div>
                     </div>
+
+
                 </div>
             </div>
         </main>
@@ -1561,7 +1579,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         });
     }
 </script>
-<script type="module" src="AI_Book_Summarizer/Github_Summarizer.js"></script>
+<script type="module" src="server/AI_Book_Summarizer/Books_Summarizer.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
