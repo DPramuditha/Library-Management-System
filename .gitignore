@@ -27,5 +27,5 @@ junit.xml
 Thumbs.db
 ehthumbs.db
 .DS_Store
-config.js
+server/config.js
 /node_modules/
