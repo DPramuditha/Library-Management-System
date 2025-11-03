@@ -24,7 +24,7 @@ The Library Management System is a comprehensive web application designed to str
 <div>
   
   ## <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png" alt="Robot" width="40" height="40" /> AI Book Summarizer Integration 
- 
+ ![AI-Powered Book Summarizer Demo](assets/dashborad_images/AI-Powered%20Book%20Summarizer.gif)
   
   The **AI Book Summarizer** is seamlessly integrated into the student dashboard, providing:
 
